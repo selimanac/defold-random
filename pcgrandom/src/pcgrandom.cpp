@@ -4,14 +4,12 @@
 
 #include <dmsdk/sdk.h>
 #include <dmsdk/dlib/log.h>
-
 #include "pcg_basic.h"
 #include <math.h>
 #include "entropy.h"
 
 // If you want to use TIME based seed, uncomment this:
 //#include <time.h>  // You can use time instead of entropy
-
 
 pcg32_random_t rng;
 
@@ -65,7 +63,6 @@ static int number(lua_State *L)
 
 static int check(lua_State *L)
 {
-
     int top = lua_gettop(L);
 
     int rounds = 1;
@@ -143,7 +140,6 @@ static int check(lua_State *L)
     return 0;
 }
 
-// Functions exposed to Lua
 static const luaL_reg Module_methods[] =
     {
         {"double", double_num},
@@ -173,7 +169,6 @@ dmExtension::Result app_init_pcgrandom(dmExtension::AppParams *params)
 
 dmExtension::Result init_pcgrandom(dmExtension::Params *params)
 {
-    // Init Lua
     LuaInit(params->m_L);
     printf("Registered %s Extension\n", MODULE_NAME);
 
