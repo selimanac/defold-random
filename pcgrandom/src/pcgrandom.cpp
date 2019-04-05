@@ -9,6 +9,7 @@
 #include <math.h>
 #include "entropy.h"
 
+// If you want to use TIME based seed, uncomment this:
 //#include <time.h>  // You can use time instead of entropy
 
 
@@ -175,10 +176,14 @@ dmExtension::Result init_pcgrandom(dmExtension::Params *params)
     // Init Lua
     LuaInit(params->m_L);
     printf("Registered %s Extension\n", MODULE_NAME);
+
+    // If you want to use TIME based seed, comment these lines
     uint64_t seeds[2];
     entropy_getbytes((void *)seeds, sizeof(seeds));
     pcg32_srandom_r(&rng, seeds[0], seeds[1]);
+    // ---------------
 
+    // If you want to use TIME based seed, uncomment this:
     //pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)&printf, (intptr_t)&rng); // You can use time instead of entropy
 
     return dmExtension::RESULT_OK;

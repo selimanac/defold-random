@@ -1,39 +1,40 @@
 function init(self)
 	msg.post(".", "acquire_input_focus")
 
-	local num = rnd.number()
 	local s = ""
 	local d = 0.0
-	local x = 0 
+	local x = 0
 	local y = 0
+	local num = 0
 
-	print("32 bit num: " .. num)
+	num = rnd.number()
 
+	print("32 bit integer: " .. num)
 	print("--------------------")
 	print("TOSS A COIN")
-	for i=1,10 do
+	for i = 1, 10 do
 		ss = rnd.toss()
 		print("Toss: " .. ss) -- 0 = 'H' : 1 = 'T'
 	end
 	print("--------------------")
 	print("ROLL THE DICE")
-	for i=1,10 do
+	for i = 1, 10 do
 		s = rnd.roll()
-		print("Roll: " .. s) 
+		print("Roll: " .. s)
 	end
 	print("--------------------")
 	print("DOUBLE 0<->1 ")
-	for i=1,10 do
+	for i = 1, 10 do
 		d = rnd.double()
-		print("Double: " .. d)  -- range [0,1]
+		print("Double: " .. d) -- range [0,1]
 	end
 	print("--------------------")
 	print("RANGE")
-	for i=1,10 do
-		 x = rnd.range(10,30)
-		 y = rnd.range(50,70)
-		print("Range:", x,y)
-		num = rnd.range(x,y)
+	for i = 1, 10 do
+		x = rnd.range(10, 30)
+		y = rnd.range(50, 70)
+		print("Range:", x, y)
+		num = rnd.range(x, y)
 		print("Result: " .. num)
 	end
 	print("--------------------")
