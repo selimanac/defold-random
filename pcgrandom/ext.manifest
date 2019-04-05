@@ -1,0 +1,16 @@
+name: "pcgrandom"
+
+platforms:
+ x86_64-osx:
+  context:
+   flags:      ["-std=c++11", "-stdlib=libc++"]
+   libs:       ["z","c++"]
+
+ arm64-ios:
+  context:
+   flags:      ["-std=c++11", "-stdlib=libc++"]
+   libs:       ["z","c++"]
+
+ armv7-ios:
+  context:
+   flags:      ["-std=c++11", "-stdlib=libc++"]
