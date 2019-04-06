@@ -11,12 +11,16 @@
 // If you want to use TIME based seed, uncomment this:
 //#include <time.h>  // You can use time instead of entropy
 
-pcg32_random_t rng;
+static pcg32_random_t rng;
+static int32_t num;
+static int32_t min;
+static int32_t max;
+static double d;
 
 static int double_num(lua_State *L)
 {
     int top = lua_gettop(L);
-    double d = ldexp(pcg32_random_r(&rng), -32);
+    d = ldexp(pcg32_random_r(&rng), -32);
     lua_pushnumber(L, d);
     assert(top + 1 == lua_gettop(L));
     return 1;
@@ -25,8 +29,8 @@ static int double_num(lua_State *L)
 static int roll(lua_State *L)
 {
     int top = lua_gettop(L);
-    int t = (int)pcg32_boundedrand_r(&rng, 6) + 1;
-    lua_pushinteger(L, t);
+    num = (int)pcg32_boundedrand_r(&rng, 6) + 1;
+    lua_pushinteger(L, num);
     assert(top + 1 == lua_gettop(L));
     return 1;
 }
@@ -34,8 +38,8 @@ static int roll(lua_State *L)
 static int toss(lua_State *L)
 {
     int top = lua_gettop(L);
-    int t = pcg32_boundedrand_r(&rng, 2) ? 0 : 1;
-    lua_pushinteger(L, t);
+    num = pcg32_boundedrand_r(&rng, 2) ? 0 : 1;
+    lua_pushinteger(L, num);
     assert(top + 1 == lua_gettop(L));
     return 1;
 }
@@ -43,11 +47,11 @@ static int toss(lua_State *L)
 static int range(lua_State *L)
 {
     int top = lua_gettop(L);
-    int32_t min = luaL_checknumber(L, 1);
-    int32_t max = luaL_checknumber(L, 2);
+    min = luaL_checknumber(L, 1);
+    max = luaL_checknumber(L, 2);
     max++;
-    int32_t z = pcg32_boundedrand_r(&rng, (max - min)) + min;
-    lua_pushinteger(L, z);
+    num = pcg32_boundedrand_r(&rng, (max - min)) + min;
+    lua_pushinteger(L, num);
     assert(top + 1 == lua_gettop(L));
     return 1;
 }
@@ -55,8 +59,8 @@ static int range(lua_State *L)
 static int number(lua_State *L)
 {
     int top = lua_gettop(L);
-    int32_t t = pcg32_random_r(&rng);
-    lua_pushinteger(L, t);
+    num = pcg32_random_r(&rng);
+    lua_pushinteger(L, num);
     assert(top + 1 == lua_gettop(L));
     return 1;
 }

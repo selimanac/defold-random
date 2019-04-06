@@ -7,9 +7,12 @@ function init(self)
 	local y = 0
 	local num = 0
 
-	num = rnd.number()
-
-	print("32 bit integer: " .. num)
+	print("--------------------")
+	print("Number")
+	for i = 1, 10 do
+		num = rnd.number()
+		print("32 bit integer: " .. num)
+	end
 	print("--------------------")
 	print("TOSS A COIN")
 	for i = 1, 10 do
