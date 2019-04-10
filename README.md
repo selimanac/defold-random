@@ -21,11 +21,14 @@ Returns a 32 bit integer
 
 ### rnd.range(min, max)
 
-Returns a 32 bit integer between min and max values.
+Returns a 32 bit integer between min and max values.  
+Same as **math.random(3,20)**  
+**math.random(90)** => rnd.range(1, 90)
 
 ###  rnd.double()
 
-Returns a floating point between 0-1
+Returns a floating point between 0-1.  
+Same as **math.random()**
 
 ###  rnd.toss()
 
