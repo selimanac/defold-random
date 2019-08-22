@@ -44,3 +44,12 @@ Testing entropy.
 
 
 
+## Release Notes
+
+1.1
+
+- Fixed integers.
+
+1.0
+
+Initial release.
