@@ -11,7 +11,7 @@ function init(self)
 	print("Number")
 	for i = 1, 10 do
 		num = rnd.number()
-		print("32 bit integer: " .. num)
+		print("32 bit unsigned integer: " .. num)
 	end
 	print("--------------------")
 	print("TOSS A COIN")
@@ -26,7 +26,7 @@ function init(self)
 		print("Roll: " .. num)
 	end
 	print("--------------------")
-	print("DOUBLE 0<->1 ")
+	print("DOUBLE 0 -> 1 ")
 	for i = 1, 10 do
 		d = rnd.double()
 		print("Double: " .. d) -- range [0,1]
@@ -38,7 +38,7 @@ function init(self)
 		y = rnd.range(50, 70)
 		print("Range:", x, y)
 		num = rnd.range(x, y)
-		print("Result: " .. num)
+		print("Result (unsigned int): " .. num)
 	end
 	print("--------------------")
 	print("TEST")

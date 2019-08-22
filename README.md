@@ -17,13 +17,13 @@ You can use PCG Random in your own project by adding this project as a [Defold l
 
 ### rnd.number()
 
-Returns a 32 bit integer
+Returns a 32 bit unsigned integer.
 
 ### rnd.range(min, max)
 
-Returns a 32 bit integer between min and max values.  
+Returns a 32 bit unsigned integer between min and max values. Only for positive numbers(unsigned integers).   
 Same as **math.random(3,20)**  
-**math.random(90)** => rnd.range(1, 90)
+**math.random(90)** == rnd.range(1, 90)
 
 ###  rnd.double()
 

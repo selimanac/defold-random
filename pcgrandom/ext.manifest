@@ -3,14 +3,14 @@ name: "pcgrandom"
 platforms:
  x86_64-osx:
   context:
-   flags:      ["-std=c++11", "-stdlib=libc++"]
+   flags:      ["-std=c++11"]
    libs:       ["z","c++"]
 
  arm64-ios:
   context:
-   flags:      ["-std=c++11", "-stdlib=libc++"]
+   flags:      ["-std=c++11"]
    libs:       ["z","c++"]
 
  armv7-ios:
   context:
-   flags:      ["-std=c++11", "-stdlib=libc++"]
+   flags:      ["-std=c++11"]

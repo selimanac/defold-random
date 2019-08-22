@@ -12,9 +12,9 @@
 //#include <time.h>  // You can use time instead of entropy
 
 static pcg32_random_t rng;
-static int32_t num;
-static int32_t min;
-static int32_t max;
+static uint32_t num;
+static uint32_t min;
+static uint32_t max;
 static double d;
 
 static int double_num(lua_State *L)
