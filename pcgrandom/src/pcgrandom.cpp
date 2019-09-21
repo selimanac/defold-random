@@ -8,13 +8,14 @@
 #include <math.h>
 #include "entropy.h"
 
-// If you want to use TIME based seed, uncomment this:
-//#include <time.h>  // You can use time instead of entropy
+//#include <time.h>
 
 static pcg32_random_t rng;
 static uint32_t num;
 static uint32_t min;
 static uint32_t max;
+static uint32_t seed;
+static uint64_t seeds[2];
 static double d;
 
 static int double_num(lua_State *L)
@@ -51,30 +52,44 @@ static int range(lua_State *L)
     max = luaL_checknumber(L, 2);
     max++;
     num = pcg32_boundedrand_r(&rng, (max - min)) + min;
-    lua_pushinteger(L, num);
+    lua_pushnumber(L, num);
     assert(top + 1 == lua_gettop(L));
     return 1;
+}
+
+static int seedgen(lua_State *L)
+{
+    seed = luaL_optnumber(L, 1, 0);
+    if (seed == 0)
+    {
+        entropy_getbytes((void *)seeds, sizeof(seeds));
+        pcg32_srandom_r(&rng, seeds[0], seeds[1]);
+    }
+    else
+    {
+        seed = luaL_checknumber(L, 1);
+        pcg32_srandom_r(&rng, seed, sizeof(seed));
+    }
+
+    return 0;
 }
 
 static int number(lua_State *L)
 {
     int top = lua_gettop(L);
     num = pcg32_random_r(&rng);
-    lua_pushinteger(L, num);
+    lua_pushnumber(L, num);
     assert(top + 1 == lua_gettop(L));
     return 1;
 }
 
 static int check(lua_State *L)
 {
-    int top = lua_gettop(L);
-
     int rounds = 1;
-    bool nondeterministic_seed = true;
     int round, i;
 
-    int32_t t = pcg32_random_r(&rng);
-    printf("Int: %d", t);
+    uint32_t t = pcg32_random_r(&rng);
+    printf("uint: %u", t);
     printf("\n");
 
     printf("pcg32_random_r:\n"
@@ -146,6 +161,8 @@ static int check(lua_State *L)
 
 static const luaL_reg Module_methods[] =
     {
+
+        {"seed", seedgen},
         {"double", double_num},
         {"roll", roll},
         {"toss", toss},
@@ -176,14 +193,14 @@ dmExtension::Result init_pcgrandom(dmExtension::Params *params)
     LuaInit(params->m_L);
     printf("Registered %s Extension\n", MODULE_NAME);
 
-    // If you want to use TIME based seed, comment these lines
-    uint64_t seeds[2];
+    // Entropy seed with Time based fallback:
     entropy_getbytes((void *)seeds, sizeof(seeds));
     pcg32_srandom_r(&rng, seeds[0], seeds[1]);
+
     // ---------------
 
-    // If you want to use TIME based seed, uncomment this:
-    //pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)&printf, (intptr_t)&rng); // You can use time instead of entropy
+    // Time based seed:
+    //pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)&printf, (intptr_t)&rng);
 
     return dmExtension::RESULT_OK;
 }

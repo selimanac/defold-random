@@ -1,52 +1,59 @@
-function init(self)
-	msg.post(".", "acquire_input_focus")
+local d = 0.0
+local x = 0
+local y = 0
+local num = 0
 
+local function test()
+    print("--------------------")
+    print("Numbers")
+    for i = 1, 10 do
+        num = rnd.number()
+        print("32 bit unsigned integer: " .. num)
+    end
 
-	local d = 0.0
-	local x = 0
-	local y = 0
-	local num = 0
+    print("--------------------")
+    print("TOSS A COIN")
+    for i = 1, 10 do
+        num = rnd.toss()
+        print("Toss: " .. num) -- 0 = 'H' : 1 = 'T'
+    end
 
-	print("--------------------")
-	print("Number")
-	for i = 1, 10 do
-		num = rnd.number()
-		print("32 bit unsigned integer: " .. num)
-	end
-	print("--------------------")
-	print("TOSS A COIN")
-	for i = 1, 10 do
-		num = rnd.toss()
-		print("Toss: " .. num) -- 0 = 'H' : 1 = 'T'
-	end
-	print("--------------------")
-	print("ROLL THE DICE")
-	for i = 1, 10 do
-		num = rnd.roll()
-		print("Roll: " .. num)
-	end
-	print("--------------------")
-	print("DOUBLE 0 -> 1 ")
-	for i = 1, 10 do
-		d = rnd.double()
-		print("Double: " .. d) -- range [0,1]
-	end
-	print("--------------------")
-	print("RANGE")
-	for i = 1, 10 do
-		x = rnd.range(10, 30)
-		y = rnd.range(50, 70)
-		print("Range:", x, y)
-		num = rnd.range(x, y)
-		print("Result (unsigned int): " .. num)
-	end
-	print("--------------------")
-	print("TEST")
-	rnd.check()
+    print("--------------------")
+    print("ROLL THE DICE")
+    for i = 1, 10 do
+        num = rnd.roll()
+        print("Roll: " .. num)
+    end
+
+    print("--------------------")
+    print("DOUBLE 0 -> 1 ")
+    for i = 1, 10 do
+        d = rnd.double()
+        print("Double: " .. d) -- range [0,1]
+    end
+
+    print("--------------------")
+    print("RANGE")
+    for i = 1, 10 do
+        x = rnd.range(10, 30)
+        y = rnd.range(50, 70)
+        print("Range:", x, y)
+        num = rnd.range(x, y)
+        print("Result (unsigned int): " .. num)
+    end
+
+    print("--------------------")
 end
 
-function on_input(self, action_id, action)
-	if action_id == hash("touch") and action.pressed then
-		print("Touch!")
-	end
+function init(self)
+    test()
+
+    num = 1593685104 -- Seed the generator with 32bit Unsigned Integer
+    print("SEED NUM: ", num)
+    rnd.seed(num)
+
+    test()
+
+    rnd.seed() -- Seed the generator using entropy
+    rnd.check()
 end

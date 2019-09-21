@@ -15,11 +15,16 @@ You can use PCG Random in your own project by adding this project as a [Defold l
 
 ## Usage
 
+### rnd.seed(`num`)
+
+Seed the random number generator with 32 bit unsigned integer.   
+If the `num` is empty or 0 then build-in entropy seed generator will be used; simply use `rnd.seed()` for using build-in entropy seed generator.
+
 ### rnd.number()
 
 Returns a 32 bit unsigned integer.
 
-### rnd.range(min, max)
+### rnd.range(`min, max`)
 
 Returns a 32 bit unsigned integer between min and max values. Only for positive numbers(unsigned integers).   
 Same as **math.random(3,20)**  
@@ -45,6 +50,11 @@ Testing entropy.
 
 
 ## Release Notes
+
+1.2
+
+- Added static seed
+- Small fix.
 
 1.1
 
