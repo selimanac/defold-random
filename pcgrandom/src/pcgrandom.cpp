@@ -18,6 +18,18 @@ static uint32_t seed;
 static uint64_t seeds[2];
 static double d;
 
+static void entropy_seed()
+{
+    // Entropy seed with Time based fallback:
+    entropy_getbytes((void *)seeds, sizeof(seeds));
+    pcg32_srandom_r(&rng, seeds[0], seeds[1]);
+
+    // ---------------
+
+    // Time based seed:
+    //pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)&printf, (intptr_t)&rng);
+}
+
 static int double_num(lua_State *L)
 {
     int top = lua_gettop(L);
@@ -62,8 +74,7 @@ static int seedgen(lua_State *L)
     seed = luaL_optnumber(L, 1, 0);
     if (seed == 0)
     {
-        entropy_getbytes((void *)seeds, sizeof(seeds));
-        pcg32_srandom_r(&rng, seeds[0], seeds[1]);
+        entropy_seed();
     }
     else
     {
@@ -193,14 +204,7 @@ dmExtension::Result init_pcgrandom(dmExtension::Params *params)
     LuaInit(params->m_L);
     printf("Registered %s Extension\n", MODULE_NAME);
 
-    // Entropy seed with Time based fallback:
-    entropy_getbytes((void *)seeds, sizeof(seeds));
-    pcg32_srandom_r(&rng, seeds[0], seeds[1]);
-
-    // ---------------
-
-    // Time based seed:
-    //pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)&printf, (intptr_t)&rng);
+    entropy_seed();
 
     return dmExtension::RESULT_OK;
 }
