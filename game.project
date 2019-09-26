@@ -1,5 +1,6 @@
 [project]
 title = defold-random
+version = 1.2.1
 
 [bootstrap]
 main_collection = /example/main.collectionc

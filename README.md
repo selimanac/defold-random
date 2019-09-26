@@ -15,10 +15,18 @@ You can use PCG Random in your own project by adding this project as a [Defold l
 
 ## Usage
 
-### rnd.seed(`num`)
+### rnd.seed(`init_state, init_seq`)
 
-Seed the random number generator with 32 bit unsigned integer.   
-If the `num` is empty or 0 then build-in entropy seed generator will be used; simply use `rnd.seed()` for using build-in entropy seed generator.
+Seeds the random number generator. 
+
+`init_state` is the starting state for the RNG, you can pass any 64-bit value.  
+
+`init_seq` selects the output sequence for the RNG, you can pass any 64-bit value, although only the low 63 bits are significant.
+  
+
+### rnd.seed()
+
+Reset random number generator by using entropy seed.
 
 ### rnd.number()
 
@@ -51,7 +59,7 @@ Testing entropy.
 
 ## Release Notes
 
-1.2
+1.2.1
 
 - Added static seed
 - Small fix.

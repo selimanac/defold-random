@@ -1,7 +1,8 @@
 local d = 0.0
 local x = 0
 local y = 0
-local num = 0
+local init_state = 0
+local init_seq = 0
 
 local function test()
     print("--------------------")
@@ -46,14 +47,22 @@ local function test()
 end
 
 function init(self)
+    -- entropy test
     test()
 
-    num = 1593685104 -- Seed the generator with 32bit Unsigned Integer
-    print("SEED NUM: ", num)
-    rnd.seed(num)
-
+    -- Static seed test
+ 
+    
+    init_state = 9191672977641436033 -- Seed the generator with 32bit Unsigned Integer
+    init_seq = 11568046644284625181
+    print("Static")
+    rnd.seed(init_state, init_seq)
     test()
 
+    -- entropy test
     rnd.seed() -- Seed the generator using entropy
+    test()
+
+    -- system check
     rnd.check()
 end

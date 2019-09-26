@@ -14,7 +14,9 @@ static pcg32_random_t rng;
 static uint32_t num;
 static uint32_t min;
 static uint32_t max;
-static uint32_t seed;
+static uint64_t seedinitstate;
+static uint64_t seedinitseq;
+
 static uint64_t seeds[2];
 static double d;
 
@@ -71,15 +73,16 @@ static int range(lua_State *L)
 
 static int seedgen(lua_State *L)
 {
-    seed = luaL_optnumber(L, 1, 0);
-    if (seed == 0)
+    seedinitstate = luaL_optnumber(L, 1, 0);
+    if (seedinitstate == 0)
     {
         entropy_seed();
     }
     else
     {
-        seed = luaL_checknumber(L, 1);
-        pcg32_srandom_r(&rng, seed, sizeof(seed));
+        seedinitstate = luaL_checknumber(L, 1);
+        seedinitseq = luaL_checknumber(L, 2);
+        pcg32_srandom_r(&rng, seedinitstate, seedinitseq);
     }
 
     return 0;
