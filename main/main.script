@@ -51,12 +51,10 @@ function init(self)
     test()
 
     -- Static seed test
- 
-    
-    init_state = 9191672977641436033 -- Seed the generator with 32bit Unsigned Integer
+    init_state = 9191672977641436033
     init_seq = 11568046644284625181
-    print("Static")
     rnd.seed(init_state, init_seq)
+    print("Static")
     test()
 
     -- entropy test
