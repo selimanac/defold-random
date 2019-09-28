@@ -8,6 +8,9 @@
 #include <math.h>
 #include "entropy.h"
 
+//#define __STDC_FORMAT_MACROS
+//#include <inttypes.h>
+
 //#include <time.h>
 
 static pcg32_random_t rng;
@@ -82,6 +85,8 @@ static int seedgen(lua_State *L)
     {
         seedinitstate = luaL_checknumber(L, 1);
         seedinitseq = luaL_checknumber(L, 2);
+        //printf("seedinitstate: %" PRIu64 "\n", seedinitstate);
+        //printf("seedinitseq: %" PRIu64 "\n", seedinitseq);
         pcg32_srandom_r(&rng, seedinitstate, seedinitseq);
     }
 

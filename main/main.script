@@ -51,13 +51,15 @@ function init(self)
     test()
 
     -- Static seed test
-    init_state = 9191672977641436033
-    init_seq = 11568046644284625181
+    init_state = 9191672977641436
+    init_seq = 1156804664428462
+
     rnd.seed(init_state, init_seq)
+
     print("Static")
     test()
 
-    -- entropy test
+    -- re-seed by using entropy
     rnd.seed() -- Seed the generator using entropy
     test()
 
