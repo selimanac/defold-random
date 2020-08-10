@@ -15,7 +15,7 @@ You can use PCG Random in your own project by adding this project as a [Defold l
 
 ## Usage
 
-### rnd.seed(`init_state, init_seq`)
+### rnd.seed(`init_state`, `init_seq`)
 
 Seeds the random number generator.   
 Random number generator is always initialized by using entropy seed. You don't need to call this method unless you want to control the seed.
@@ -35,7 +35,7 @@ Random number generator is always initialized by using entropy seed. You don’t
 
 Returns a 32 bit unsigned integer.
 
-### rnd.range(`min, max`)
+### rnd.range(`min`, `max`)
 
 Returns a 32 bit unsigned integer between min and max values. Only for positive numbers(unsigned integers).   
 Same as **math.random(3,20)**  
@@ -61,6 +61,10 @@ Testing entropy.
 
 
 ## Release Notes
+
+1.2.2
+
+- `rnd.range` was causing a crash when MIN is bigger than MAX. Error message added.
 
 1.2.1
 

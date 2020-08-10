@@ -67,6 +67,13 @@ static int range(lua_State *L)
     int top = lua_gettop(L);
     min = luaL_checknumber(L, 1);
     max = luaL_checknumber(L, 2);
+
+
+    if (min >= max) {
+        dmLogError("rnd.range: MAX(%i) must be bigger than MIN(%i)", max, min);
+        return 0;
+    }
+
     max++;
     num = pcg32_boundedrand_r(&rng, (max - min)) + min;
     lua_pushnumber(L, num);
@@ -112,12 +119,12 @@ static int check(lua_State *L)
     printf("\n");
 
     printf("pcg32_random_r:\n"
-           "      -  result:      32-bit unsigned int (uint32_t)\n"
-           "      -  period:      2^64   (* 2^63 streams)\n"
-           "      -  state type:  pcg32_random_t (%zu bytes)\n"
-           "      -  output func: XSH-RR\n"
-           "\n",
-           sizeof(pcg32_random_t));
+        "      -  result:      32-bit unsigned int (uint32_t)\n"
+        "      -  period:      2^64   (* 2^63 streams)\n"
+        "      -  state type:  pcg32_random_t (%zu bytes)\n"
+        "      -  output func: XSH-RR\n"
+        "\n",
+        sizeof(pcg32_random_t));
 
     for (round = 1; round <= rounds; ++round)
     {
@@ -163,9 +170,9 @@ static int check(lua_State *L)
         }
 
         printf("  Cards:");
-        static const char number[] = {'A', '2', '3', '4', '5', '6', '7',
-                                      '8', '9', 'T', 'J', 'Q', 'K'};
-        static const char suit[] = {'h', 'c', 'd', 's'};
+        static const char number[] ={ 'A', '2', '3', '4', '5', '6', '7',
+            '8', '9', 'T', 'J', 'Q', 'K' };
+        static const char suit[] ={ 'h', 'c', 'd', 's' };
         for (i = 0; i < CARDS; ++i)
         {
             printf(" %c%c", number[cards[i] / SUITS], suit[cards[i] % SUITS]);
@@ -179,16 +186,16 @@ static int check(lua_State *L)
 }
 
 static const luaL_reg Module_methods[] =
-    {
+{
 
-        {"seed", seedgen},
-        {"double", double_num},
-        {"roll", roll},
-        {"toss", toss},
-        {"range", range},
-        {"number", number},
-        {"check", check},
-        {0, 0}};
+    { "seed", seedgen },
+    { "double", double_num },
+    { "roll", roll },
+    { "toss", toss },
+    { "range", range },
+    { "number", number },
+    { "check", check },
+    { 0, 0 } };
 
 static void LuaInit(lua_State *L)
 {

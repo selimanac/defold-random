@@ -43,6 +43,9 @@ local function test()
         print("Result (unsigned int): " .. num)
     end
 
+    print("Error check:")
+    local z =  rnd.range(1, 0) 
+    print(z)
     print("--------------------")
 end
 
