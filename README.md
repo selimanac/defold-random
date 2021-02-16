@@ -62,6 +62,10 @@ Testing entropy.
 
 ## Release Notes
 
+1.2.3
+
+- `rnd.range` returns min if min == max.
+
 1.2.2
 
 - `rnd.range` was causing a crash when MIN is bigger than MAX. Error message added.

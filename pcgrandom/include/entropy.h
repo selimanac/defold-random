@@ -25,6 +25,7 @@
 #define ENTROPY_H_INCLUDED 1
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #if __cplusplus
 extern "C" {
