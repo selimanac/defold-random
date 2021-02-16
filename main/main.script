@@ -47,6 +47,7 @@ local function test()
     local z =  rnd.range(10, 0) 
     print(z)
     print("--------------------")
+    
     print("Return min:")
     local z =  rnd.range(5, 5) 
     print(z)
