@@ -46,6 +46,11 @@ Same as **math.random(3,20)**
 Returns a floating point between 0-1.  
 Same as **math.random()**
 
+###  rnd.double_range(`min`, `max`)
+
+Returns a floating point between min - max.  
+Not fast as `rnd.double()`
+
 ###  rnd.toss()
 
 Toss a coin. Returns 0 or 1 (0 = 'H', 1 = 'T')
@@ -60,7 +65,11 @@ Testing entropy.
 
 
 
-## Release Notes
+## Release Notes  
+
+1.2.4
+
+- `rnd.double_range(min, max)` added.
 
 1.2.3
 

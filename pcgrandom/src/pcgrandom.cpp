@@ -23,6 +23,9 @@ static uint64_t seedinitseq;
 static uint64_t seeds[2];
 static double d;
 
+static double dmin;
+static double dmax;
+
 static void entropy_seed()
 {
     // Entropy seed with Time based fallback:
@@ -35,10 +38,36 @@ static void entropy_seed()
     //pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)&printf, (intptr_t)&rng);
 }
 
+static int double_range(lua_State *L)
+{
+    int top = lua_gettop(L);
+    dmin = luaL_checknumber(L, 1);
+    dmax = luaL_checknumber(L, 2);
+
+    if (dmin == dmax)
+    {
+        lua_pushnumber(L, dmin);
+        return 1;
+    }
+
+    if (dmin > dmax)
+    {
+        dmLogError("rnd.range: MAX(%i) must be bigger than MIN(%i)", dmax, dmin);
+        return 0;
+    }
+
+    num = pcg32_random_r(&rng);
+    d = (double)(num) / ((double)UINT32_MAX) * (dmax - dmin) + dmin;
+
+    lua_pushnumber(L, d);
+    assert(top + 1 == lua_gettop(L));
+    return 1;
+}
 static int double_num(lua_State *L)
 {
     int top = lua_gettop(L);
     d = ldexp(pcg32_random_r(&rng), -32);
+
     lua_pushnumber(L, d);
     assert(top + 1 == lua_gettop(L));
     return 1;
@@ -65,12 +94,12 @@ static int toss(lua_State *L)
 static int range(lua_State *L)
 {
     int top = lua_gettop(L);
-    min = luaL_checknumber(L, 1);
-    max = luaL_checknumber(L, 2);
+    min = luaL_checkinteger(L, 1);
+    max = luaL_checkinteger(L, 2);
 
     if (min == max)
     {
-        lua_pushnumber(L, min);
+        lua_pushinteger(L, min);
         return 1;
     }
 
@@ -82,7 +111,7 @@ static int range(lua_State *L)
 
     max++;
     num = pcg32_boundedrand_r(&rng, (max - min)) + min;
-    lua_pushnumber(L, num);
+    lua_pushinteger(L, num);
     assert(top + 1 == lua_gettop(L));
     return 1;
 }
@@ -110,7 +139,7 @@ static int number(lua_State *L)
 {
     int top = lua_gettop(L);
     num = pcg32_random_r(&rng);
-    lua_pushnumber(L, num);
+    lua_pushinteger(L, num);
     assert(top + 1 == lua_gettop(L));
     return 1;
 }
@@ -196,6 +225,7 @@ static const luaL_reg Module_methods[] =
 
         {"seed", seedgen},
         {"double", double_num},
+        {"double_range", double_range},
         {"roll", roll},
         {"toss", toss},
         {"range", range},
