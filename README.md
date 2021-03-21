@@ -67,6 +67,10 @@ Testing entropy.
 
 ## Release Notes  
 
+1.2.5
+
+- Fix for [#4](https://github.com/selimanac/defold-random/issues/4#issue-837151758)
+
 1.2.4
 
 - `rnd.double_range(min, max)` added.

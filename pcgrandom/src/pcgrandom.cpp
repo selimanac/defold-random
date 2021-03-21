@@ -63,6 +63,7 @@ static int double_range(lua_State *L)
     assert(top + 1 == lua_gettop(L));
     return 1;
 }
+
 static int double_num(lua_State *L)
 {
     int top = lua_gettop(L);
@@ -77,7 +78,7 @@ static int roll(lua_State *L)
 {
     int top = lua_gettop(L);
     num = (int)pcg32_boundedrand_r(&rng, 6) + 1;
-    lua_pushinteger(L, num);
+    lua_pushnumber(L, num);
     assert(top + 1 == lua_gettop(L));
     return 1;
 }
@@ -86,7 +87,7 @@ static int toss(lua_State *L)
 {
     int top = lua_gettop(L);
     num = pcg32_boundedrand_r(&rng, 2) ? 0 : 1;
-    lua_pushinteger(L, num);
+    lua_pushnumber(L, num);
     assert(top + 1 == lua_gettop(L));
     return 1;
 }
@@ -94,12 +95,12 @@ static int toss(lua_State *L)
 static int range(lua_State *L)
 {
     int top = lua_gettop(L);
-    min = luaL_checkinteger(L, 1);
-    max = luaL_checkinteger(L, 2);
+    min = luaL_checknumber(L, 1);
+    max = luaL_checknumber(L, 2);
 
     if (min == max)
     {
-        lua_pushinteger(L, min);
+        lua_pushnumber(L, min);
         return 1;
     }
 
@@ -111,7 +112,7 @@ static int range(lua_State *L)
 
     max++;
     num = pcg32_boundedrand_r(&rng, (max - min)) + min;
-    lua_pushinteger(L, num);
+    lua_pushnumber(L, num);
     assert(top + 1 == lua_gettop(L));
     return 1;
 }
@@ -139,7 +140,7 @@ static int number(lua_State *L)
 {
     int top = lua_gettop(L);
     num = pcg32_random_r(&rng);
-    lua_pushinteger(L, num);
+    lua_pushnumber(L, num);
     assert(top + 1 == lua_gettop(L));
     return 1;
 }
