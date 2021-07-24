@@ -67,7 +67,7 @@ Testing entropy.
 
 ## Release Notes  
 
-1.2.7
+1.2.6
 
 - Fix for [#6](https://github.com/selimanac/defold-random/issues/6#issue-951284950)
 - Fix for [#7](https://github.com/selimanac/defold-random/issues/7#issue-951982666)
