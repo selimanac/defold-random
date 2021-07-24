@@ -52,7 +52,7 @@ static int double_range(lua_State *L)
 
     if (dmin > dmax)
     {
-        dmLogError("rnd.range: MAX(%i) must be bigger than MIN(%i)", dmax, dmin);
+        dmLogError("rnd.range: MAX(%f) must be bigger than MIN(%f)", dmax, dmin);
         return 0;
     }
 
@@ -106,7 +106,7 @@ static int range(lua_State *L)
 
     if (min > max)
     {
-        dmLogError("rnd.range: MAX(%i) must be bigger than MIN(%i)", max, min);
+        dmLogError("rnd.range: MAX(%u) must be bigger than MIN(%u)", max, min);
         return 0;
     }
 
@@ -247,15 +247,13 @@ static void LuaInit(lua_State *L)
 
 dmExtension::Result app_init_pcgrandom(dmExtension::AppParams *params)
 {
-
     return dmExtension::RESULT_OK;
 }
 
 dmExtension::Result init_pcgrandom(dmExtension::Params *params)
 {
     LuaInit(params->m_L);
-    printf("Registered %s Extension\n", MODULE_NAME);
-
+    dmLogInfo("Registered %s Extension\n", MODULE_NAME);
     entropy_seed();
 
     return dmExtension::RESULT_OK;
