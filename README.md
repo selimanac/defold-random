@@ -71,6 +71,7 @@ Testing entropy.
 
 - Fix for [#6](https://github.com/selimanac/defold-random/issues/6#issue-951284950)
 - Fix for [#7](https://github.com/selimanac/defold-random/issues/7#issue-951982666)
+- Auto-complete for native extensions 
 
 1.2.5
 

@@ -1,0 +1,68 @@
+- name: rnd
+  type: table
+  desc: PCG Random Number Generator Native Extension for the Defold Game Engines
+  members:
+
+  - name: seed
+    type: function
+    desc: Seeds the random number generator.   
+          Random number generator is always initialized by using entropy seed. You don't need to call this method unless you want to control the seed.
+    parameters:
+    - name: init_state
+      type: number
+      desc: init_state is the starting state for the RNG, you can pass any 64-bit value.  
+    - name: init_seq
+      type: number
+      desc: init_seq selects the output sequence for the RNG, you can pass any 64-bit value, although only the low 63 bits are significant.
+
+  - name: seed
+    type: function
+    desc: Re-seed the random number generator by using entropy seed.  
+          Random number generator is always initialized by using entropy seed. You don’t need to call this method unless you want to re-seed. 
+
+  - name: number
+    type: function
+    desc: Returns a 32 bit unsigned integer.
+    returns:
+    - name: Random Number
+      type: number
+      desc: Returns a 32 bit unsigned integer.
+  
+  - name: range
+    type: function
+    desc: Returns a 32 bit unsigned integer between min and max values. Only for positive numbers(unsigned integers).
+    returns:
+    - name: Random Number
+      type: number
+      desc: Returns a 32 bit unsigned integer between min and max values.   
+    parameters:
+    - name: min
+      type: number
+      desc: minimum integer.  
+    - name: max
+      type: number
+      desc: maximum integer.
+  
+  - name: double
+    type: function
+    desc: Returns a floating point between min - max.  
+    returns:
+    - name: Random DOUBLE
+      type: number
+      desc: Returns a floating point between min - max. 
+  
+  - name: toss
+    type: function
+    desc: Toss a coin. 
+    returns:
+    - name: Random Number
+      type: number
+      desc: Returns 0 or 1 (0 = 'H', 1 = 'T')
+
+  - name: roll
+    type: function
+    desc: Roll the dice. 
+    returns:
+    - name: Random Number
+      type: number
+      desc: Returns between 1-6    
