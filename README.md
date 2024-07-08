@@ -1,3 +1,5 @@
+![Defold - PCG Random](/.github/pcgrandom-hero.png?raw=true)
+
 # Defold - PCG Random
 
 PCG Random Number Generator Native Extension for the Defold Game Engine
@@ -12,6 +14,12 @@ You can use PCG Random in your own project by adding this project as a [Defold l
 	https://github.com/selimanac/defold-random/archive/master.zip
 	
 ---
+
+## Toss a Coin to Your Witcher
+If you find my [Defold Extensions](https://github.com/selimanac) useful for your projects, please consider [supporting](https://github.com/sponsors/selimanac) it.  
+I'd love to hear about your projects! Please share your released projects that use my native extensions. It would be very motivating for me.
+
+
 
 ## Usage
 
@@ -41,31 +49,66 @@ Returns a 32 bit unsigned integer between min and max values. Only for positive 
 Same as **math.random(3,20)**  
 **math.random(90)** == rnd.range(1, 90)
 
-###  rnd.double()
+### rnd.double()
 
 Returns a floating point between 0-1.  
 Same as **math.random()**
 
-###  rnd.double_range(`min`, `max`)
+### rnd.double_range(`min`, `max`)
 
 Returns a floating point between min - max.  
 Not fast as `rnd.double()`
 
-###  rnd.toss()
+### rnd.dice(`roll`, `type`)
+
+DnD style dice roller.   
+
+**PARAMETERS**
+
+* ```roll``` (int) - Roll amount
+* ```type``` (enum) - Type of the dice
+
+	**rnd.d4** : D4: four-sided die.       
+	**rnd.d6** : D6: six-sided die.    
+	**rnd.d8** : D8: eight-sided die.    
+	**rnd.d10** : D10: ten-sided die (0-9).   
+	**rnd.d12** : D12: twelve-sided die.    
+	**rnd.d20** : D20: twenty-sided die.    
+	**rnd.d100** : D%: percentile die (0-90).    
+	
+**RETURN**
+
+* ```result``` (table) - Dice results
+* ```total``` (int) - Total amout of dice results
+
+**EXAMPLE**
+
+```lua
+
+local result, total = rnd.dice(2, rnd.d10)
+
+```
+
+
+### rnd.toss()
 
 Toss a coin. Returns 0 or 1 (0 = 'H', 1 = 'T')
 
-###  rnd.roll()
+### rnd.roll()
 
 Roll the dice. Returns between 1-6
 
-###  rnd.check()
+### rnd.check()
 
 Testing entropy.
 
 
 
-## Release Notes  
+## Release Notes
+
+1.2.7
+
+- rnd.dice added. 
 
 1.2.6
 
