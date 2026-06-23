@@ -349,7 +349,7 @@ static int number(lua_State* L)
     return 1;
 }
 
-static int boolean(lua_State* L)
+static int rnd_boolean(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 1);
     lua_pushboolean(L, pcg32_boundedrand_r(&rng, 2) != 0);
@@ -501,7 +501,7 @@ static const luaL_reg Module_methods[] = {
     { "doubles", doubles },           //
     { "roll", roll },                 //
     { "toss", toss },                 //
-    { "boolean", boolean },           //
+    { "boolean", rnd_boolean },       //
     { "chance", chance },             //
     { "range", range },
     { "ranges", ranges },
