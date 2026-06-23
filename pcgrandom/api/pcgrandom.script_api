@@ -1,6 +1,6 @@
 - name: rnd
   type: table
-  desc: PCG Random Number Generator Native Extension for the Defold Game Engines
+  desc: PCG Random Number Generator Native Extension for the Defold Game Engine
   members:
     - name: seed
       type: function
@@ -9,61 +9,134 @@
       parameters:
         - name: init_state
           type: number
-          desc: init_state is the starting state for the RNG, you can pass any 64-bit value.
+          desc: init_state is the starting state for the RNG. Use 32-bit unsigned integer values for exact deterministic repeatability from Lua.
         - name: init_seq
           type: number
-          desc: init_seq selects the output sequence for the RNG, you can pass any 64-bit value, although only the low 63 bits are significant.
+          desc: init_seq selects the output sequence for the RNG. Use 32-bit unsigned integer values for exact deterministic repeatability from Lua.
 
     - name: seed
       type: function
       desc: Re-seed the random number generator by using entropy seed.
-        Random number generator is always initialized by using entropy seed. You don’t need to call this method unless you want to re-seed.
+        Random number generator is always initialized by using entropy seed. You don't need to call this method unless you want to re-seed.
+
+    - name: seed32
+      type: function
+      desc: Seeds the random number generator with exact unsigned 32-bit values.
+      parameters:
+        - name: init_state
+          type: number
+          desc: Starting state for the RNG. Must be an unsigned 32-bit integer.
+        - name: init_seq
+          type: number
+          desc: Output sequence for the RNG. Must be an unsigned 32-bit integer.
 
     - name: number
       type: function
-      desc: Returns a 32 bit unsigned integer.
+      desc: Returns a 32-bit unsigned integer.
       returns:
         - name: Random Number
           type: number
-          desc: Returns a 32 bit unsigned integer.
+          desc: Returns a 32-bit unsigned integer.
+
+    - name: numbers
+      type: function
+      desc: Returns a table of 32-bit unsigned integers.
+      parameters:
+        - name: count
+          type: number
+          desc: Number of values to generate. Must be a non-negative integer.
+      returns:
+        - name: Random Numbers
+          type: table
+          desc: Table of 32-bit unsigned integers.
 
     - name: range
       type: function
-      desc: Returns a 32 bit unsigned integer between min and max values. Only for positive numbers(unsigned integers).
-      returns:
-        - name: Random Number
-          type: number
-          desc: Returns a 32 bit unsigned integer between min and max values.
+      desc: Returns a 32-bit unsigned integer between min and max values, inclusive. Only unsigned integers are supported.
       parameters:
         - name: min
           type: number
-          desc: minimum integer.
+          desc: Minimum unsigned integer.
         - name: max
           type: number
-          desc: maximum integer.
+          desc: Maximum unsigned integer.
+      returns:
+        - name: Random Number
+          type: number
+          desc: Returns a 32-bit unsigned integer between min and max values.
+
+    - name: ranges
+      type: function
+      desc: Returns a table of 32-bit unsigned integers between min and max values, inclusive.
+      parameters:
+        - name: count
+          type: number
+          desc: Number of values to generate. Must be a non-negative integer.
+        - name: min
+          type: number
+          desc: Minimum unsigned integer.
+        - name: max
+          type: number
+          desc: Maximum unsigned integer.
+      returns:
+        - name: Random Numbers
+          type: table
+          desc: Table of 32-bit unsigned integers between min and max values.
 
     - name: double
       type: function
-      desc: Returns a floating point between min - max.
-      returns:
-        - name: Random DOUBLE
-          type: number
-          desc: Returns a floating point between min - max.
-
-    - name: double_range
-      type: function
-      desc: Returns a floating point number between min - max. Not fast as rnd.double()
+      desc: Returns a floating point number in [0, 1).
       returns:
         - name: Random Number
           type: number
-          desc: Returns a floating point number between min and max values.
+          desc: Returns a floating point number in [0, 1).
+
+    - name: doubles
+      type: function
+      desc: Returns a table of floating point numbers in [0, 1).
+      parameters:
+        - name: count
+          type: number
+          desc: Number of values to generate. Must be a non-negative integer.
+      returns:
+        - name: Random Numbers
+          type: table
+          desc: Table of floating point numbers in [0, 1).
+
+    - name: double_range
+      type: function
+      desc: Returns a floating point number in [min, max). Not fast as rnd.double()
       parameters:
         - name: min
           type: number
-          desc: minimum number.
+          desc: Minimum number.
         - name: max
           type: number
-          desc: maximum number.
+          desc: Maximum number.
+      returns:
+        - name: Random Number
+          type: number
+          desc: Returns a floating point number in [min, max).
+
+    - name: boolean
+      type: function
+      desc: Returns true or false with equal probability.
+      returns:
+        - name: Random Boolean
+          type: boolean
+          desc: Random boolean value.
+
+    - name: chance
+      type: function
+      desc: Returns true according to the given probability.
+      parameters:
+        - name: probability
+          type: number
+          desc: Probability from 0.0 to 1.0. Values <= 0 are always false and values >= 1 are always true.
+      returns:
+        - name: Success
+          type: boolean
+          desc: True if the probability check succeeds.
 
     - name: toss
       type: function
@@ -81,6 +154,36 @@
           type: number
           desc: Returns between 1-6
 
+    - name: dice
+      type: function
+      desc: Rolls dice using one of the exported dice constants.
+      parameters:
+        - name: roll
+          type: number
+          desc: Roll count. Must be greater than 0.
+        - name: type
+          type: number
+          desc: Dice type. Use rnd.d4, rnd.d6, rnd.d8, rnd.d10, rnd.d12, rnd.d20, or rnd.d100.
+      returns:
+        - name: Results
+          type: table
+          desc: Table of dice results.
+        - name: Total
+          type: number
+          desc: Total amount of dice results.
+
+    - name: shuffle
+      type: function
+      desc: Shuffles the array part of a table in place using Fisher-Yates.
+      parameters:
+        - name: array
+          type: table
+          desc: Table to shuffle.
+      returns:
+        - name: Array
+          type: table
+          desc: The same table, shuffled in place.
+
     - name: check
       type: function
-      desc: Testing entropy.
+      desc: Debug/sample method that prints PCG sample output and consumes RNG state.

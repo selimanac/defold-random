@@ -1,24 +1,22 @@
 /*
  * PCG Random Number Generation for C.
  *
- * Copyright 2014 Melissa O'Neill <oneill@pcg-random.org>
+  * Copyright 2014-2017 Melissa O'Neill <oneill@pcg-random.org>,
+ *                     and the PCG Project contributors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * SPDX-License-Identifier: (Apache-2.0 OR MIT)
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (provided in
+ * LICENSE-APACHE.txt and at http://www.apache.org/licenses/LICENSE-2.0)
+ * or under the MIT license (provided in LICENSE-MIT.txt and at
+ * http://opensource.org/licenses/MIT), at your option. This file may not
+ * be copied, modified, or distributed except according to those terms.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Distributed on an "AS IS" BASIS, WITHOUT WARRANTY OF ANY KIND, either
+ * express or implied.  See your chosen license for details.
  *
  * For additional information about the PCG random number generation scheme,
- * including its license and other licensing options, visit
- *
- *     http://www.pcg-random.org
+ * visit http://www.pcg-random.org/.
  */
  
 /* This code provides a mechanism for getting external randomness for 
@@ -49,7 +47,7 @@
 #endif
 #endif
 
-// If HAVE_DEV_RANDOM is set, we use that value, otherwise we guess
+/* If HAVE_DEV_RANDOM is set, we use that value, otherwise we guess */
 #ifndef HAVE_DEV_RANDOM
 #define HAVE_DEV_RANDOM         IS_UNIX
 #endif
@@ -61,23 +59,21 @@
 
 #if HAVE_DEV_RANDOM 
 /* entropy_getbytes(dest, size):
- *     Use /dev/random to get some external entropy for seeding purposes.
+ *     Use /dev/urandom to get some external entropy for seeding purposes.
  *
  * Note:
- *     If reading /dev/random fails (which ought to never happen), it returns
+ *     If reading /dev/urandom fails (which ought to never happen), it returns
  *     false, otherwise it returns true.  If it fails, you could instead call
  *     fallback_entropy_getbytes which always succeeds.
  */
 
 bool entropy_getbytes(void* dest, size_t size)
 {
-    int fd = open("/dev/random", O_RDONLY);
+    int fd = open("/dev/urandom", O_RDONLY);
     if (fd < 0)
         return false;
-    int sz = read(fd, dest, size);
-    if (sz < size)
-        return false;
-    return close(fd) == 0;
+    ssize_t sz = read(fd, dest, size);
+    return (close(fd) == 0) && (sz == (ssize_t) size);
 }
 #else
 bool entropy_getbytes(void* dest, size_t size)
@@ -95,10 +91,10 @@ bool entropy_getbytes(void* dest, size_t size)
 
 void fallback_entropy_getbytes(void* dest, size_t size)
 {
-    // Most modern OSs use address-space randomization, meaning that we can
-    // use the address of stack variables and system library code as
-    // initializers.  It's not as good as using /dev/random, but probably
-    // better than using the current time alone.
+    /* Most modern OSs use address-space randomization, meaning that we can
+       use the address of stack variables and system library code as
+       initializers.  It's not as good as using /dev/random, but probably
+       better than using the current time alone. */
 
     static PCG_SPINLOCK_DECLARE(mutex);
     PCG_SPINLOCK_LOCK(mutex);

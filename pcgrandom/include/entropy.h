@@ -28,11 +28,12 @@
 #include <stddef.h>
 
 #if __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-extern bool entropy_getbytes(void* dest, size_t size);
-extern void fallback_entropy_getbytes(void* dest, size_t size);
+    extern bool entropy_getbytes(void* dest, size_t size);
+    extern void fallback_entropy_getbytes(void* dest, size_t size);
 
 #if __cplusplus
 }

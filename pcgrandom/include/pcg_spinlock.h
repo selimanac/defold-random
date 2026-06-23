@@ -20,7 +20,7 @@
  *
  *     http://www.pcg-random.org
  */
- 
+
 /* This code provides a minimal spinlock implementation.  It's only used
  * in supporting fallback_entropy_getbytes.
  */
@@ -29,29 +29,38 @@
 #define PCG_SPINLOCK_H_INCLUDED 1
 
 #ifndef __has_include
-    #define INCLUDE_OKAY(x) 1
+#define INCLUDE_OKAY(x) 1
 #else
-    #define INCLUDE_OKAY(x) __has_include(x)
+#define INCLUDE_OKAY(x) __has_include(x)
 #endif
 
-#if __STDC_VERSION__ >= 201112L && !__STDC_NO_ATOMICS__ \
-        && INCLUDE_OKAY(<stdatomic.h>)
-    #include <stdatomic.h>
-    #define PCG_SPINLOCK_DECLARE(mutex) atomic_flag mutex = ATOMIC_FLAG_INIT
-    #define PCG_SPINLOCK_LOCK(mutex)    do {} \
-                                        while (atomic_flag_test_and_set(&mutex))
-    #define PCG_SPINLOCK_UNLOCK(mutex)  atomic_flag_clear(&mutex)
+#if __STDC_VERSION__ >= 201112L && !__STDC_NO_ATOMICS__ && INCLUDE_OKAY(<stdatomic.h>)
+#include <stdatomic.h>
+#define PCG_SPINLOCK_DECLARE(mutex) atomic_flag mutex = ATOMIC_FLAG_INIT
+#define PCG_SPINLOCK_LOCK(mutex) \
+    do \
+    { \
+    } while (atomic_flag_test_and_set(&mutex))
+#define PCG_SPINLOCK_UNLOCK(mutex) atomic_flag_clear(&mutex)
 #elif __GNUC__
-    #define PCG_SPINLOCK_DECLARE(mutex) volatile int mutex = 0
-    #define PCG_SPINLOCK_LOCK(mutex)    \
-                do {} while(__sync_lock_test_and_set(&mutex, 1))
-    #define PCG_SPINLOCK_UNLOCK(mutex)  __sync_lock_release(&mutex)
+#define PCG_SPINLOCK_DECLARE(mutex) volatile int mutex = 0
+#define PCG_SPINLOCK_LOCK(mutex) \
+    do \
+    { \
+    } while (__sync_lock_test_and_set(&mutex, 1))
+#define PCG_SPINLOCK_UNLOCK(mutex) __sync_lock_release(&mutex)
 #else
-    #warning No implementation of spinlocks provided.  No thread safety.
-    #define PCG_SPINLOCK_DECLARE(mutex) volatile int mutex = 0
-    #define PCG_SPINLOCK_LOCK(mutex)    \
-                do { while(mutex == 1){} mutex = 1; } while(0)
-    #define PCG_SPINLOCK_UNLOCK(mutex)  mutex = 0;
+#warning No implementation of spinlocks provided.  No thread safety.
+#define PCG_SPINLOCK_DECLARE(mutex) volatile int mutex = 0
+#define PCG_SPINLOCK_LOCK(mutex) \
+    do \
+    { \
+        while (mutex == 1) \
+        { \
+        } \
+        mutex = 1; \
+    } while (0)
+#define PCG_SPINLOCK_UNLOCK(mutex) mutex = 0;
 #endif
 
 #endif // PCG_SPINLOCK_H_INCLUDED

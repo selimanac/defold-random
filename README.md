@@ -6,7 +6,7 @@ PCG Random Number Generator Native Extension for the Defold Game Engine
 
 This extension allow you to generate random numbers using minimal [C implementation of PCG](http://www.pcg-random.org/using-pcg-c-basic.html).
 
-It uses [entropy](https://github.com/imneme/pcg-c/blob/master/extras/entropy.c) seed internally with fallback to time based seed. You can switch to Time based seed and remove the entropy by uncommenting/commenting a few lines on the source code, but I don't think it is necessary. 
+It uses the upstream PCG [entropy](https://github.com/imneme/pcg-c/blob/master/extras/entropy.c) helper internally when `rnd.seed()` is called without arguments or when the extension initializes. The vendored `entropy.c` file is intentionally kept close to upstream PCG. Project-specific behavior, such as checking whether OS entropy succeeded, falling back to the PCG fallback seed source, and logging the selected seed source, is handled in the Defold binding layer.
 
 ## Installation
 You can use PCG Random in your own project by adding this project as a [Defold library dependency](http://www.defold.com/manuals/libraries/). Open your game.project file and in the dependencies field under project add:
@@ -29,10 +29,16 @@ Seeds the random number generator.
 Random number generator is always initialized by using entropy seed. You don't need to call this method unless you want to control the seed.
 
 
-`init_state` is the starting state for the RNG, you can pass any 64-bit value.  
-`init_seq` selects the output sequence for the RNG, you can pass any 64-bit value, although only the low 63 bits are significant.
- 
-**Caution:** I don't recommend using of 64-bit integers. Consider using 32-bit integers instead. 
+`init_state` is the starting state for the RNG.
+`init_seq` selects the output sequence for the RNG, although only the low 63 bits are significant.
+
+Lua numbers cannot exactly represent every 64-bit integer. For deterministic repeatability, use 32-bit unsigned integer seed values.
+
+### rnd.seed32(`init_state`, `init_seq`)
+
+Seeds the random number generator with exact unsigned 32-bit integer values.
+
+Use this method when you need deterministic repeatability from Lua without relying on 64-bit number precision.
 
 ### rnd.seed()
 
@@ -43,21 +49,49 @@ Random number generator is always initialized by using entropy seed. You don’t
 
 Returns a 32 bit unsigned integer.
 
+### rnd.numbers(`count`)
+
+Returns a table of 32 bit unsigned integers.
+
+`count` must be a non-negative integer. `rnd.numbers(0)` returns an empty table.
+
 ### rnd.range(`min`, `max`)
 
 Returns a 32 bit unsigned integer between min and max values. Only for positive numbers(unsigned integers).   
 Same as **math.random(3,20)**  
 **math.random(90)** == rnd.range(1, 90)
 
+### rnd.ranges(`count`, `min`, `max`)
+
+Returns a table of 32 bit unsigned integers between min and max values.
+
+`count` must be a non-negative integer. `min` and `max` must be unsigned 32-bit integers.
+
 ### rnd.double()
 
 Returns a floating point between 0-1.  
 Same as **math.random()**
 
+### rnd.doubles(`count`)
+
+Returns a table of floating point numbers in `[0, 1)`.
+
+`count` must be a non-negative integer. `rnd.doubles(0)` returns an empty table.
+
 ### rnd.double_range(`min`, `max`)
 
-Returns a floating point between min - max.  
+Returns a floating point between min - max, using the range `[min, max)`.
 Not fast as `rnd.double()`
+
+### rnd.boolean()
+
+Returns `true` or `false` with equal probability.
+
+### rnd.chance(`probability`)
+
+Returns `true` according to the given probability.
+
+Values less than or equal to `0` always return `false`. Values greater than or equal to `1` always return `true`.
 
 ### rnd.dice(`roll`, `type`)
 
@@ -98,13 +132,47 @@ Toss a coin. Returns 0 or 1 (0 = 'H', 1 = 'T')
 
 Roll the dice. Returns between 1-6
 
+### rnd.shuffle(`array`)
+
+Shuffles the array part of a table in place using Fisher-Yates and returns the same table.
+
+```lua
+
+local items = { "a", "b", "c", "d" }
+rnd.shuffle(items)
+
+```
+
 ### rnd.check()
 
-Testing entropy.
+Debug/sample method that prints PCG sample output and consumes RNG state.
 
 
 
 ## Release Notes
+
+
+1.2.8
+
+- Added `rnd.seed32(init_state, init_seq)` for exact deterministic unsigned 32-bit seeding from Lua.
+- Added batch generators:
+  - `rnd.numbers(count)`
+  - `rnd.ranges(count, min, max)`
+  - `rnd.doubles(count)`
+- Added probability helpers:
+  - `rnd.boolean()`
+  - `rnd.chance(probability)`
+- Added `rnd.shuffle(array)` for in-place Fisher-Yates table shuffling.
+- Added `pcgrandom/annotations.lua` 
+- Added missing `rnd.dice()` documentation to `pcgrandom.script_api`.
+- Added entropy reseed logging showing whether OS entropy or fallback entropy was used.
+- `rnd.seed()` now reseeds from entropy only when called with no arguments.
+- `rnd.seed(0, seq)` is now valid deterministic seeding behavior.
+- `rnd.double_range(min, max)` now generates values in `[min, max)`, matching `rnd.double()` semantics.
+
+
+
+
 
 1.2.7
 

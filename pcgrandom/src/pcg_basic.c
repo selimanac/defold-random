@@ -71,7 +71,6 @@ uint32_t pcg32_random()
     return pcg32_random_r(&pcg32_global);
 }
 
-
 // pcg32_boundedrand(bound):
 // pcg32_boundedrand_r(rng, bound):
 //     Generate a uniformly distributed number, r, where 0 <= r < bound
@@ -98,19 +97,18 @@ uint32_t pcg32_boundedrand_r(pcg32_random_t* rng, uint32_t bound)
     // should usually terminate quickly; on average (assuming all bounds are
     // equally likely), 82.25% of the time, we can expect it to require just
     // one iteration.  In the worst case, someone passes a bound of 2^31 + 1
-    // (i.e., 2147483649), which invalidates almost 50% of the range.  In 
+    // (i.e., 2147483649), which invalidates almost 50% of the range.  In
     // practice, bounds are typically small and only a tiny amount of the range
     // is eliminated.
-    for (;;) {
+    for (;;)
+    {
         uint32_t r = pcg32_random_r(rng);
         if (r >= threshold)
             return r % bound;
     }
 }
 
-
 uint32_t pcg32_boundedrand(uint32_t bound)
 {
     return pcg32_boundedrand_r(&pcg32_global, bound);
 }
-

@@ -1,108 +1,136 @@
-local d = 0.0
-local x = 0
-local y = 0
-local init_state = 0
-local init_seq = 0
-
-local function test()
+local function print_section(title, description)
 	print("--------------------")
-	print("Numbers")
-	for i = 1, 10 do
-		num = rnd.number()
-		print("32 bit unsigned integer: " .. num)
+	print(title)
+	print(description)
+end
+
+local function print_values(label, values)
+	local parts = {}
+	for index, value in ipairs(values) do
+		parts[index] = tostring(value)
 	end
+	print(label .. ": " .. table.concat(parts, ", "))
+end
 
-	print("--------------------")
-	print("TOSS A COIN")
-	for i = 1, 10 do
-		num = rnd.toss()
-		print("Toss: " .. num) -- 0 = 'H' : 1 = 'T'
+local function test_seed_entropy()
+	print_section("rnd.seed()", "Reseed the global PCG generator from entropy. This changes the following random sequence.")
+	rnd.seed()
+	print("First number after entropy seed:", rnd.number())
+end
+
+local function test_seed32()
+	print_section("rnd.seed32(init_state, init_seq)", "Use exact unsigned 32-bit seeds for deterministic repeatability from Lua.")
+
+	rnd.seed32(0, 1)
+	local first_a = rnd.number()
+	local second_a = rnd.number()
+
+	rnd.seed32(0, 1)
+	local first_b = rnd.number()
+	local second_b = rnd.number()
+
+	print("First run:", first_a, second_a)
+	print("Second run with same seed:", first_b, second_b)
+	print("Sequences match:", first_a == first_b and second_a == second_b)
+
+	rnd.seed()
+	print("Restored entropy-backed randomness after deterministic seed32 test.")
+	print("Random run marker:", rnd.number())
+end
+
+local function test_numbers()
+	print_section("rnd.number() and rnd.numbers(count)", "Generate one 32-bit unsigned integer or a table of 32-bit unsigned integers.")
+
+	print("Single number:", rnd.number())
+	print_values("Five numbers", rnd.numbers(5))
+	print_values("Zero numbers returns an empty table", rnd.numbers(0))
+end
+
+local function test_ranges()
+	print_section("rnd.range(min, max) and rnd.ranges(count, min, max)", "Generate inclusive unsigned integer ranges. Invalid ranges log an error and return no value.")
+
+	local min_value = rnd.range(10, 30)
+	local max_value = rnd.range(50, 70)
+	print("Generated bounds:", min_value, max_value)
+	print("Value inside generated bounds:", rnd.range(min_value, max_value))
+	print("Equal min/max returns that value:", rnd.range(5, 5))
+	print_values("Five values in [10, 20]", rnd.ranges(5, 10, 20))
+	print_values("Zero ranged values returns an empty table", rnd.ranges(0, 10, 20))
+
+	print("Invalid range example: rnd.range(10, 0) logs an error and returns nil.")
+	local z = rnd.range(10, 0)
+	print("Invalid range result:", z)
+end
+
+local function test_doubles()
+	print_section("rnd.double(), rnd.doubles(count), and rnd.double_range(min, max)", "Generate floating point numbers in [0, 1) or [min, max).")
+
+	print("Single double in [0, 1):", rnd.double())
+	print_values("Five doubles in [0, 1)", rnd.doubles(5))
+	print_values("Zero doubles returns an empty table", rnd.doubles(0))
+
+	for index = 1, 3 do
+		print("Double range [1.2, 2.5) #" .. index .. ":", rnd.double_range(1.2, 2.5))
 	end
+end
 
-	print("--------------------")
-	print("ROLL THE DICE")
-	for i = 1, 10 do
-		num = rnd.roll()
-		print("Roll: " .. num)
-	end
+local function test_probability()
+	print_section("rnd.boolean() and rnd.chance(probability)", "Generate booleans directly or with probability thresholds.")
 
-	print("--------------------")
-	print("DOUBLE 0 -> 1 ")
-	for i = 1, 10 do
-		d = rnd.double()
-		print("Double: " .. d) -- range [0,1]
-	end
-
-	print("--------------------")
-	print("DOUBLE RANGE 1.2 -> 2.5 ")
-	for i = 1, 10 do
-		d = rnd.double_range(1.2, 2.5)
-		print("Double Range: " .. d)
-	end
-
-	print("--------------------")
-	print("RANGE")
-	for i = 1, 10 do
-		x = rnd.range(10, 30)
-		y = rnd.range(50, 70)
-		print("Range:", x, y)
-		num = rnd.range(x, y)
-		print("Result (unsigned int): " .. num)
-	end
-
-	print("Error check:")
-	local z
-	= rnd.range(10, 0)
-	print(z)
-	print("--------------------")
-
-	print("Return min:")
-	local z = rnd.range(5, 5)
-	print(z)
-	print("--------------------")
+	print("Equal probability boolean:", rnd.boolean())
+	print("chance(0) always false:", rnd.chance(0))
+	print("chance(0.5) returns a random boolean:", rnd.chance(0.5))
+	print("chance(1) always true:", rnd.chance(1))
 end
 
 local function test_dice()
-	local dice_types = {
-		d4 = rnd.d4,
-		d6 = rnd.d6,
-		d8 = rnd.d8,
-		d10 = rnd.d10,
-		d12 = rnd.d12,
-		d20 = rnd.d20,
-		d100 = rnd.d100
+	print_section("rnd.roll() and rnd.dice(roll, type)", "Roll a six-sided die or DnD-style dice using exported constants.")
 
+	print("Single d6 roll:", rnd.roll())
+
+	local dice_types = {
+		{ name = "d4",   type = rnd.d4 },
+		{ name = "d6",   type = rnd.d6 },
+		{ name = "d8",   type = rnd.d8 },
+		{ name = "d10",  type = rnd.d10 },
+		{ name = "d12",  type = rnd.d12 },
+		{ name = "d20",  type = rnd.d20 },
+		{ name = "d100", type = rnd.d100 }
 	}
 
 	local count = 5
-
-	for name, dice_type in pairs(dice_types) do
-		print("-- " .. count .. name .. " --")
-		local result, total = rnd.dice(count, dice_type)
+	for _, dice_type in ipairs(dice_types) do
+		print(count .. dice_type.name .. " results:")
+		local result, total = rnd.dice(count, dice_type.type)
 		pprint(result)
 		print("Total:", total)
 	end
 end
 
-function init(self)
-	-- entropy test
-	test()
+local function test_shuffle()
+	print_section("rnd.shuffle(array)", "Shuffle the array part of a table in place and return the same table.")
 
-	-- Static seed test
-	init_state = 9191672977641436
-	init_seq = 1156804664428462
+	local items = { "alpha", "bravo", "charlie", "delta", "echo" }
+	print_values("Before shuffle", items)
 
-	rnd.seed(init_state, init_seq)
+	local shuffled = rnd.shuffle(items)
+	print_values("After shuffle", items)
+	print("Returned same table:", shuffled == items)
+end
 
-	print("Static")
-	test()
-
-	-- re-seed by using entropy
-	rnd.seed() -- Seed the generator using entropy
-	test()
-
-	test_dice()
-
-	-- system check
+local function test_debug_check()
+	print_section("rnd.check()", "Debug/sample output from the PCG reference code. This consumes RNG state, so it runs last.")
 	rnd.check()
+end
+
+function init(self)
+	test_seed_entropy()
+	test_seed32()
+	test_numbers()
+	test_ranges()
+	test_doubles()
+	test_probability()
+	test_dice()
+	test_shuffle()
+	test_debug_check()
 end
