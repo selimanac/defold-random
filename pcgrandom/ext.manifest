@@ -5,12 +5,30 @@ platforms:
   context:
    flags:      ["-std=c++11"]
    libs:       ["z","c++"]
+   frameworks: ["Security"]
+
+ arm64-osx:
+  context:
+   flags:      ["-std=c++11"]
+   libs:       ["z","c++"]
+   frameworks: ["Security"]
 
  arm64-ios:
   context:
    flags:      ["-std=c++11"]
    libs:       ["z","c++"]
+   frameworks: ["Security"]
 
  armv7-ios:
   context:
    flags:      ["-std=c++11"]
+   libs:       ["z","c++"]
+   frameworks: ["Security"]
+
+ x86-win32:
+  context:
+   libs:       ["bcrypt"]
+
+ x86_64-win32:
+  context:
+   libs:       ["bcrypt"]

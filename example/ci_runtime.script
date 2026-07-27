@@ -1,0 +1,106 @@
+local EPSILON = 0.000000000001
+
+local function fail_check(name, actual, expected)
+	error(name .. " expected " .. tostring(expected) .. " got " .. tostring(actual), 2)
+end
+
+local function expect_equal(name, actual, expected)
+	if actual ~= expected then
+		fail_check(name, actual, expected)
+	end
+end
+
+local function expect_close(name, actual, expected)
+	if math.abs(actual - expected) > EPSILON then
+		fail_check(name, string.format("%.15f", actual), string.format("%.15f", expected))
+	end
+end
+
+local function expect_unsigned32(name, value)
+	if value < 0 or value > 4294967295 then
+		error(name .. " expected unsigned 32-bit value got " .. tostring(value), 2)
+	end
+end
+
+local function expect_array_equal(name, actual, expected)
+	expect_equal(name .. " count", #actual, #expected)
+
+	for index = 1, #expected do
+		expect_equal(name .. "[" .. index .. "]", actual[index], expected[index])
+	end
+end
+
+local function expect_array_close(name, actual, expected)
+	expect_equal(name .. " count", #actual, #expected)
+
+	for index = 1, #expected do
+		expect_close(name .. "[" .. index .. "]", actual[index], expected[index])
+	end
+end
+
+local function expect_unsigned_array(name, values)
+	for index = 1, #values do
+		expect_unsigned32(name .. "[" .. index .. "]", values[index])
+	end
+end
+
+local function check_expected_sequence(label, rng)
+	local number = rnd.number(rng)
+	expect_equal(label .. " number", number, 2280515124)
+	expect_unsigned32(label .. " number unsigned", number)
+	print(label .. " number:", number)
+
+	expect_equal(label .. " bound", rnd.bound(rng, 10), 4)
+	expect_equal(label .. " range", rnd.range(rng, 1, 30), 24)
+	expect_close(label .. " double", rnd.double(rng), 0.802030595019460)
+	expect_close(label .. " double_range", rnd.double_range(rng, 10, 20), 12.835282715968788)
+	expect_equal(label .. " boolean", rnd.boolean(rng), false)
+	expect_equal(label .. " chance", rnd.chance(rng, 0.5), true)
+	expect_equal(label .. " roll", rnd.roll(rng), 3)
+	expect_equal(label .. " toss", rnd.toss(rng), 0)
+	expect_equal(label .. " card", rnd.card(rng), 7)
+
+	local suit, rank = rnd.card2(rng)
+	expect_equal(label .. " card2 suit", suit, 3)
+	expect_equal(label .. " card2 rank", rank, 1)
+
+	local numbers = rnd.numbers(rng, 3)
+	expect_array_equal(label .. " numbers", numbers, { 4128692393, 2627019424, 3609760386 })
+	expect_unsigned_array(label .. " numbers unsigned", numbers)
+	print(label .. " numbers:", table.concat(numbers, ", "))
+
+	expect_array_equal(label .. " ranges", rnd.ranges(rng, 3, 100, 200), { 135, 156, 142 })
+	expect_array_close(label .. " doubles", rnd.doubles(rng, 3), { 0.400784577941522, 0.428455312270671, 0.783812454435974 })
+
+	local dice_rolls, dice_total = rnd.dice(rng, 3, rnd.d6)
+	expect_array_equal(label .. " dice", dice_rolls, { 1, 1, 3 })
+	expect_equal(label .. " dice total", dice_total, 5)
+
+	print(label .. " deterministic sequence ok")
+end
+
+function init(self)
+	rnd.clear_contexts()
+
+	local entropy_rng = rnd.new()
+	local entropy_number = rnd.number(entropy_rng)
+	expect_unsigned32("entropy number", entropy_number)
+	rnd.delete(entropy_rng)
+
+	local rng = rnd.new(12345)
+	local state, increment = rnd.state(rng)
+	check_expected_sequence("CI first", rng)
+	rnd.delete(rng)
+
+	local restored_rng = rnd.new(0)
+	rnd.set_state(restored_rng, state, increment)
+	check_expected_sequence("CI restored", restored_rng)
+	rnd.delete(restored_rng)
+
+	local rng64 = rnd.new64("18446744073709551615", "1")
+	expect_unsigned32("new64 number", rnd.number(rng64))
+	rnd.delete(rng64)
+
+	rnd.clear_contexts()
+	print("CI_RNG_OK")
+end

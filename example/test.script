@@ -1,0 +1,199 @@
+local function print_section(title, description)
+	print("--------------------")
+	print(title)
+	print(description)
+end
+
+local function print_values(label, values)
+	local parts = {}
+	for index, value in ipairs(values) do
+		parts[index] = tostring(value)
+	end
+	print(label .. ": " .. table.concat(parts, ", "))
+end
+
+local function test_seeded_contexts()
+	print_section("rnd.new(init_state, init_seq)", "Create deterministic isolated RNG contexts.")
+
+	local first = rnd.new(0, 1)
+	local second = rnd.new(0, 1)
+
+	local first_a = rnd.number(first)
+	local second_a = rnd.number(first)
+	local first_bound = rnd.bound(first, 10)
+	local first_card = rnd.card(first)
+	local first_suit, first_rank = rnd.card2(first)
+	local first_b = rnd.number(second)
+	local second_b = rnd.number(second)
+	local second_bound = rnd.bound(second, 10)
+	local second_card = rnd.card(second)
+	local second_suit, second_rank = rnd.card2(second)
+
+	print("First run:", first_a, second_a)
+	print("Second run with same seed:", first_b, second_b)
+	print("Sequences match:", first_a == first_b and second_a == second_b)
+	print("Utility sequences match:", first_bound == second_bound and first_card == second_card and first_suit == second_suit and first_rank == second_rank)
+
+	rnd.delete(first)
+	rnd.delete(second)
+end
+
+local function test_entropy_context()
+	print_section("rnd.new()", "Create an entropy-backed RNG context.")
+
+	local id = rnd.new()
+	print("First number after entropy seed:", rnd.number(id))
+	rnd.delete(id)
+end
+
+local function test_numbers(id)
+	print_section("rnd.number(id) and rnd.numbers(id, count)", "Generate one 32-bit unsigned integer or a table of 32-bit unsigned integers.")
+
+	print("Single number:", rnd.number(id))
+	print_values("Five numbers", rnd.numbers(id, 5))
+	print_values("Zero numbers returns an empty table", rnd.numbers(id, 0))
+end
+
+local function test_ranges(id)
+	print_section("rnd.bound(id, upper_bound), rnd.range(id, min, max), and rnd.ranges(id, count, min, max)", "Generate exclusive upper bounds or inclusive unsigned integer ranges.")
+
+	print("Bound [0, 10):", rnd.bound(id, 10))
+	local min_value = rnd.range(id, 10, 30)
+	local max_value = rnd.range(id, 50, 70)
+	print("Generated bounds:", min_value, max_value)
+	print("Value inside generated bounds:", rnd.range(id, min_value, max_value))
+	print("Equal min/max returns that value:", rnd.range(id, 5, 5))
+	print_values("Five values in [10, 20]", rnd.ranges(id, 5, 10, 20))
+	print_values("Zero ranged values returns an empty table", rnd.ranges(id, 0, 10, 20))
+end
+
+local function test_doubles(id)
+	print_section("rnd.double(id), rnd.doubles(id, count), and rnd.double_range(id, min, max)", "Generate floating point numbers in [0, 1) or [min, max).")
+
+	print("Single double in [0, 1):", rnd.double(id))
+	print_values("Five doubles in [0, 1)", rnd.doubles(id, 5))
+	print_values("Zero doubles returns an empty table", rnd.doubles(id, 0))
+
+	for index = 1, 3 do
+		print("Double range [1.2, 2.5) #" .. index .. ":", rnd.double_range(id, 1.2, 2.5))
+	end
+end
+
+local function test_probability(id)
+	print_section("rnd.boolean(id) and rnd.chance(id, probability)", "Generate booleans directly or with probability thresholds.")
+
+	print("Equal probability boolean:", rnd.boolean(id))
+	print("chance(0) always false:", rnd.chance(id, 0))
+	print("chance(0.5) returns a random boolean:", rnd.chance(id, 0.5))
+	print("chance(1) always true:", rnd.chance(id, 1))
+end
+
+local function test_dice(id)
+	print_section("rnd.roll(id), rnd.card(id), rnd.card2(id), and rnd.dice(id, roll, type)", "Roll dice or pick standard deck card values.")
+
+	print("Single d6 roll:", rnd.roll(id))
+	print("Card index [1, 52]:", rnd.card(id))
+	local suit, card = rnd.card2(id)
+	print("Card suit [1, 4] and rank [1, 13]:", suit, card)
+
+	local dice_types = {
+		{ name = "d4",   type = rnd.d4 },
+		{ name = "d6",   type = rnd.d6 },
+		{ name = "d8",   type = rnd.d8 },
+		{ name = "d10",  type = rnd.d10 },
+		{ name = "d12",  type = rnd.d12 },
+		{ name = "d20",  type = rnd.d20 },
+		{ name = "d100", type = rnd.d100 }
+	}
+
+	local count = 5
+	for _, dice_type in ipairs(dice_types) do
+		print(count .. dice_type.name .. " results:")
+		local result, total = rnd.dice(id, count, dice_type.type)
+		pprint(result)
+		print("Total:", total)
+	end
+end
+
+local function test_shuffle(id)
+	print_section("rnd.shuffle(id, array)", "Shuffle the array part of a table in place and return the same table.")
+
+	local items = { "alpha", "bravo", "charlie", "delta", "echo" }
+	print_values("Before shuffle", items)
+
+	local shuffled = rnd.shuffle(id, items)
+	print_values("After shuffle", items)
+	print("Returned same table:", shuffled == items)
+end
+
+local function test_state()
+	print_section("rnd.state(id) and rnd.set_state(id, state, increment)", "Save and restore exact raw PCG state.")
+
+	local id = rnd.new(12345)
+	local before_state, before_increment = rnd.state(id)
+	local first = rnd.number(id)
+	rnd.set_state(id, before_state, before_increment)
+	local second = rnd.number(id)
+
+	print("State restore matches:", first == second)
+	rnd.delete(id)
+end
+
+local function test_independence()
+	print_section("Independent contexts", "Context calls do not affect other context streams.")
+
+	local first = rnd.new(0, 1)
+	local second = rnd.new(0, 1)
+
+	local first_a = rnd.number(first)
+	rnd.range(second, 1, 100)
+	rnd.double(second)
+	local first_b = rnd.number(first)
+
+	local expected = rnd.new(0, 1)
+	local expected_a = rnd.number(expected)
+	local expected_b = rnd.number(expected)
+
+	print("First values match:", first_a == expected_a)
+	print("Second values match after other context calls:", first_b == expected_b)
+
+	rnd.delete(first)
+	rnd.delete(second)
+	rnd.delete(expected)
+end
+
+local function test_exact_64()
+	print_section("rnd.new64(init_state, init_seq)", "Use exact unsigned 64-bit decimal string seeds.")
+
+	local id = rnd.new64("18446744073709551615", "1")
+	local state, increment = rnd.state(id)
+	print("Exact 64-bit state strings:", type(state), type(increment))
+
+	rnd.reset64(id, "0", "1")
+	print("First number after exact reset64:", rnd.number(id))
+	rnd.delete(id)
+end
+
+local function test_debug_check(id)
+	print_section("rnd.check(id)", "Debug/sample output from the PCG reference code. This consumes RNG state, so it runs last.")
+	rnd.check(id)
+end
+
+function init(self)
+	test_entropy_context()
+	test_seeded_contexts()
+	test_state()
+	test_independence()
+	test_exact_64()
+
+	local id = rnd.new(42, 1)
+	test_numbers(id)
+	test_ranges(id)
+	test_doubles(id)
+	test_probability(id)
+	test_dice(id)
+	test_shuffle(id)
+	test_debug_check(id)
+	rnd.delete(id)
+	rnd.clear_contexts()
+end

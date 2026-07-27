@@ -3,7 +3,7 @@ title = defold-random
 version = 1.2.5
 
 [bootstrap]
-main_collection = /example/main.collectionc
+main_collection = /example/deterministic.collectionc
 
 [input]
 game_binding = /input/game.input_bindingc

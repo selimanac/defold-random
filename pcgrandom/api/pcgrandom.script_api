@@ -2,37 +2,112 @@
   type: table
   desc: PCG Random Number Generator Native Extension for the Defold Game Engine
   members:
-    - name: seed
+    - name: new
       type: function
-      desc: Seeds the random number generator.
-        Random number generator is always initialized by using entropy seed. You don't need to call this method unless you want to control the seed.
+      desc: Creates an isolated RNG context and returns its context id. Call without arguments to seed from entropy, with init_state to use init_seq = 1, or with init_state and init_seq for exact unsigned 32-bit deterministic seeding.
       parameters:
         - name: init_state
           type: number
-          desc: init_state is the starting state for the RNG. Use 32-bit unsigned integer values for exact deterministic repeatability from Lua.
+          desc: Optional starting state for the RNG. Must be an unsigned 32-bit integer.
         - name: init_seq
           type: number
-          desc: init_seq selects the output sequence for the RNG. Use 32-bit unsigned integer values for exact deterministic repeatability from Lua.
+          desc: Optional output sequence for the RNG. Must be an unsigned 32-bit integer.
+      returns:
+        - name: Id
+          type: number
+          desc: RNG context id.
 
-    - name: seed
+    - name: new64
       type: function
-      desc: Re-seed the random number generator by using entropy seed.
-        Random number generator is always initialized by using entropy seed. You don't need to call this method unless you want to re-seed.
-
-    - name: seed32
-      type: function
-      desc: Seeds the random number generator with exact unsigned 32-bit values.
+      desc: Creates an isolated RNG context using exact unsigned 64-bit decimal string seeds.
       parameters:
         - name: init_state
+          type: string
+          desc: Starting state for the RNG as an unsigned 64-bit decimal string.
+        - name: init_seq
+          type: string
+          desc: Output sequence for the RNG as an unsigned 64-bit decimal string.
+      returns:
+        - name: Id
           type: number
-          desc: Starting state for the RNG. Must be an unsigned 32-bit integer.
+          desc: RNG context id.
+
+    - name: reset
+      type: function
+      desc: Reseeds an existing RNG context. Call with only id to seed from entropy, with id and init_state to use init_seq = 1, or with id, init_state, and init_seq for exact unsigned 32-bit deterministic seeding.
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
+        - name: init_state
+          type: number
+          desc: Optional starting state for the RNG. Must be an unsigned 32-bit integer.
         - name: init_seq
           type: number
-          desc: Output sequence for the RNG. Must be an unsigned 32-bit integer.
+          desc: Optional output sequence for the RNG. Must be an unsigned 32-bit integer.
+
+    - name: reset64
+      type: function
+      desc: Reseeds an existing RNG context using exact unsigned 64-bit decimal string seeds.
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
+        - name: init_state
+          type: string
+          desc: Starting state for the RNG as an unsigned 64-bit decimal string.
+        - name: init_seq
+          type: string
+          desc: Output sequence for the RNG as an unsigned 64-bit decimal string.
+
+    - name: delete
+      type: function
+      desc: Deletes an RNG context. The context id becomes invalid.
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
+
+    - name: clear_contexts
+      type: function
+      desc: Deletes all RNG contexts. Existing context ids become invalid.
+
+    - name: state
+      type: function
+      desc: Returns raw PCG state and increment as unsigned 64-bit decimal strings.
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
+      returns:
+        - name: State
+          type: string
+          desc: Raw PCG state.
+        - name: Increment
+          type: string
+          desc: Raw PCG increment. Controls the PCG stream.
+
+    - name: set_state
+      type: function
+      desc: Restores raw PCG state and increment from unsigned 64-bit decimal strings.
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
+        - name: state
+          type: string
+          desc: Raw PCG state.
+        - name: increment
+          type: string
+          desc: Raw PCG increment. Controls the PCG stream.
 
     - name: number
       type: function
       desc: Returns a 32-bit unsigned integer.
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
       returns:
         - name: Random Number
           type: number
@@ -42,6 +117,9 @@
       type: function
       desc: Returns a table of 32-bit unsigned integers.
       parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
         - name: count
           type: number
           desc: Number of values to generate. Must be a non-negative integer.
@@ -50,10 +128,28 @@
           type: table
           desc: Table of 32-bit unsigned integers.
 
+    - name: bound
+      type: function
+      desc: Returns a 32-bit unsigned integer in [0, upper_bound).
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
+        - name: upper_bound
+          type: number
+          desc: Exclusive upper bound. Must be an unsigned 32-bit integer greater than 0.
+      returns:
+        - name: Random Number
+          type: number
+          desc: Returns a 32-bit unsigned integer in [0, upper_bound).
+
     - name: range
       type: function
       desc: Returns a 32-bit unsigned integer between min and max values, inclusive. Only unsigned integers are supported.
       parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
         - name: min
           type: number
           desc: Minimum unsigned integer.
@@ -69,6 +165,9 @@
       type: function
       desc: Returns a table of 32-bit unsigned integers between min and max values, inclusive.
       parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
         - name: count
           type: number
           desc: Number of values to generate. Must be a non-negative integer.
@@ -86,6 +185,10 @@
     - name: double
       type: function
       desc: Returns a floating point number in [0, 1).
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
       returns:
         - name: Random Number
           type: number
@@ -95,6 +198,9 @@
       type: function
       desc: Returns a table of floating point numbers in [0, 1).
       parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
         - name: count
           type: number
           desc: Number of values to generate. Must be a non-negative integer.
@@ -105,8 +211,11 @@
 
     - name: double_range
       type: function
-      desc: Returns a floating point number in [min, max). Not fast as rnd.double()
+      desc: Returns a floating point number in [min, max). Not fast as rnd.double(id)
       parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
         - name: min
           type: number
           desc: Minimum number.
@@ -121,6 +230,10 @@
     - name: boolean
       type: function
       desc: Returns true or false with equal probability.
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
       returns:
         - name: Random Boolean
           type: boolean
@@ -130,6 +243,9 @@
       type: function
       desc: Returns true according to the given probability.
       parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
         - name: probability
           type: number
           desc: Probability from 0.0 to 1.0. Values <= 0 are always false and values >= 1 are always true.
@@ -141,6 +257,10 @@
     - name: toss
       type: function
       desc: Toss a coin.
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
       returns:
         - name: Random Number
           type: number
@@ -149,15 +269,49 @@
     - name: roll
       type: function
       desc: Roll the dice.
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
       returns:
         - name: Random Number
           type: number
           desc: Returns between 1-6
 
+    - name: card
+      type: function
+      desc: Picks a standard deck card index.
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
+      returns:
+        - name: Card
+          type: number
+          desc: Card index in [1, 52].
+
+    - name: card2
+      type: function
+      desc: Picks a standard deck suit and rank.
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
+      returns:
+        - name: Suit
+          type: number
+          desc: Suit in [1, 4].
+        - name: Card
+          type: number
+          desc: Card rank in [1, 13].
+
     - name: dice
       type: function
       desc: Rolls dice using one of the exported dice constants.
       parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
         - name: roll
           type: number
           desc: Roll count. Must be greater than 0.
@@ -176,6 +330,9 @@
       type: function
       desc: Shuffles the array part of a table in place using Fisher-Yates.
       parameters:
+        - name: id
+          type: number
+          desc: RNG context id.
         - name: array
           type: table
           desc: Table to shuffle.
@@ -187,3 +344,7 @@
     - name: check
       type: function
       desc: Debug/sample method that prints PCG sample output and consumes RNG state.
+      parameters:
+        - name: id
+          type: number
+          desc: RNG context id.

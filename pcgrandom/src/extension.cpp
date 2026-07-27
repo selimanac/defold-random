@@ -6,8 +6,14 @@
 #include <pcgrandom.h>
 
 static const luaL_reg Module_methods[] = {
-    { "seed", rnd::seedgen },              //
-    { "seed32", rnd::seed32 },             //
+    { "new", rnd::new_context },         //
+    { "new64", rnd::new_context64 },     //
+    { "reset", rnd::reset_context },     //
+    { "reset64", rnd::reset_context64 }, //
+    { "delete", rnd::delete_context },   //
+    { "clear_contexts", rnd::clear_contexts },
+    { "state", rnd::state },               //
+    { "set_state", rnd::set_state },       //
     { "double", rnd::double_num },         //
     { "double_range", rnd::double_range }, //
     { "doubles", rnd::doubles },           //
@@ -15,10 +21,13 @@ static const luaL_reg Module_methods[] = {
     { "toss", rnd::toss },                 //
     { "boolean", rnd::rnd_boolean },       //
     { "chance", rnd::chance },             //
+    { "bound", rnd::bound },               //
     { "range", rnd::range },
     { "ranges", rnd::ranges },
     { "number", rnd::number },   //
     { "numbers", rnd::numbers }, //
+    { "card", rnd::card },       //
+    { "card2", rnd::card2 },     //
     { "check", rnd::check },     //
     { "dice", rnd::dice },       //
     { "shuffle", rnd::shuffle }, //
@@ -32,17 +41,17 @@ static void LuaInit(lua_State* L)
     // Register lua names
     luaL_register(L, MODULE_NAME, Module_methods);
 
-#define SETCONSTANT(name) \
-    lua_pushnumber(L, (lua_Number)name); \
-    lua_setfield(L, -2, #name);
+#define SETCONSTANT(field, value) \
+    lua_pushnumber(L, (lua_Number)value); \
+    lua_setfield(L, -2, field);
 
-    SETCONSTANT(rnd::DiceType::d4);
-    SETCONSTANT(rnd::DiceType::d6);
-    SETCONSTANT(rnd::DiceType::d8);
-    SETCONSTANT(rnd::DiceType::d10);
-    SETCONSTANT(rnd::DiceType::d12);
-    SETCONSTANT(rnd::DiceType::d20);
-    SETCONSTANT(rnd::DiceType::d100);
+    SETCONSTANT("d4", rnd::DiceType::d4);
+    SETCONSTANT("d6", rnd::DiceType::d6);
+    SETCONSTANT("d8", rnd::DiceType::d8);
+    SETCONSTANT("d10", rnd::DiceType::d10);
+    SETCONSTANT("d12", rnd::DiceType::d12);
+    SETCONSTANT("d20", rnd::DiceType::d20);
+    SETCONSTANT("d100", rnd::DiceType::d100);
 #undef SETCONSTANT
 
     lua_pop(L, 1);
@@ -58,7 +67,6 @@ dmExtension::Result init_pcgrandom(dmExtension::Params* params)
 {
     LuaInit(params->m_L);
     dmLogInfo("Registered %s Extension\n", MODULE_NAME);
-    rnd::entropy_seed();
 
     return dmExtension::RESULT_OK;
 }

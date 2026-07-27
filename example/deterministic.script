@@ -1,0 +1,46 @@
+local function print_values(label, values)
+	local parts = {}
+	for index, value in ipairs(values) do
+		parts[index] = tostring(value)
+	end
+	print(label .. ": " .. table.concat(parts, ", "))
+end
+
+local function print_random_results(label, rng)
+	local dice_results, dice_total = rnd.dice(rng, 3, rnd.d6)
+
+	print(label)
+	print("number:", rnd.number(rng))
+	print("bound [0, 10):", rnd.bound(rng, 10))
+	print("range [1, 30]:", rnd.range(rng, 1, 30))
+	print("double:", rnd.double(rng))
+	print("double range [10, 20):", rnd.double_range(rng, 10, 20))
+	print("boolean:", rnd.boolean(rng))
+	print("chance 50%:", rnd.chance(rng, 0.5))
+	print("roll:", rnd.roll(rng))
+	print("toss:", rnd.toss(rng))
+	print("card [1, 52]:", rnd.card(rng))
+	local suit, card = rnd.card2(rng)
+	print("card2 suit/rank:", suit, card)
+	print_values("numbers", rnd.numbers(rng, 3))
+	print_values("ranges [100, 200]", rnd.ranges(rng, 3, 100, 200))
+	print_values("doubles", rnd.doubles(rng, 3))
+	print_values("3d6", dice_results)
+	print("3d6 total:", dice_total)
+end
+
+function init(self)
+	local rng = rnd.new(12345)
+	local state, increment = rnd.state(rng)
+
+	print_random_results("First run", rng)
+
+	rnd.clear_contexts()
+
+	rng = rnd.new()
+	rnd.set_state(rng, state, increment)
+
+	print_random_results("Restored from same state", rng)
+
+	rnd.delete(rng)
+end

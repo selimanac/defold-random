@@ -1,0 +1,343 @@
+name: Platform runtime smoke tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_android_device:
+        description: "Run optional Android device smoke test on a self-hosted android-device runner"
+        required: false
+        default: false
+        type: boolean
+  push:
+    paths:
+      - "pcgrandom/**"
+      - "example/ci_runtime.*"
+      - ".github/workflows/platform-runtime.yml"
+      - "game.project"
+  pull_request:
+    paths:
+      - "pcgrandom/**"
+      - "example/ci_runtime.*"
+      - ".github/workflows/platform-runtime.yml"
+      - "game.project"
+
+permissions:
+  contents: read
+
+env:
+  DEFOLD_CHANNEL: alpha
+  BOB_VERSION_FILENAME: info.json
+  BUILD_SERVER: https://build-stage.defold.com
+  CI_MAIN_COLLECTION: /example/ci_runtime.collectionc
+
+jobs:
+  macos-runtime:
+    name: macOS runtime
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Download Bob
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL "http://d.defold.com/${DEFOLD_CHANNEL}/${BOB_VERSION_FILENAME}" > defold-info.json
+          DEFOLD_VERSION="$(sed -n 's/.*"sha1"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' defold-info.json)"
+          curl -fsSL -o bob.jar "http://d.defold.com/archive/${DEFOLD_CHANNEL}/${DEFOLD_VERSION}/bob/bob.jar"
+          java -jar bob.jar --version
+
+      - name: Use CI runtime collection
+        shell: bash
+        run: |
+          sed -i.bak "s#^main_collection = .*#main_collection = ${CI_MAIN_COLLECTION}#" game.project
+
+      - name: Bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -jar bob.jar resolve
+          java -jar bob.jar --platform=arm64-macos --architectures=arm64-macos build --build-server="${BUILD_SERVER}" --archive
+          java -jar bob.jar --platform=arm64-macos --architectures=arm64-macos bundle
+
+      - name: Run smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="$(find build/default -name "*.app" -type d | head -n 1)"
+          EXE="$(find "${APP}/Contents/MacOS" -type f | head -n 1)"
+          LOG="runtime.log"
+          "${EXE}" > "${LOG}" 2>&1 &
+          PID="$!"
+          for _ in {1..60}; do
+            if grep -q "CI_RNG_OK" "${LOG}"; then
+              break
+            fi
+            sleep 1
+          done
+          kill "${PID}" 2>/dev/null || true
+          cat "${LOG}"
+          grep -q "Seeded rnd context using SecRandomCopyBytes" "${LOG}"
+          grep -q "CI_RNG_OK" "${LOG}"
+
+  windows-runtime:
+    name: Windows runtime
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Download Bob
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL "http://d.defold.com/${DEFOLD_CHANNEL}/${BOB_VERSION_FILENAME}" > defold-info.json
+          DEFOLD_VERSION="$(sed -n 's/.*"sha1"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' defold-info.json)"
+          curl -fsSL -o bob.jar "http://d.defold.com/archive/${DEFOLD_CHANNEL}/${DEFOLD_VERSION}/bob/bob.jar"
+          java -jar bob.jar --version
+
+      - name: Use CI runtime collection
+        shell: bash
+        run: |
+          sed -i.bak "s#^main_collection = .*#main_collection = ${CI_MAIN_COLLECTION}#" game.project
+
+      - name: Bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -jar bob.jar resolve
+          java -jar bob.jar --platform=x86_64-win32 --architectures=x86_64-win32 build --build-server="${BUILD_SERVER}" --archive
+          java -jar bob.jar --platform=x86_64-win32 --architectures=x86_64-win32 bundle
+
+      - name: Run smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXE="$(find build/default -name "*.exe" -type f | head -n 1)"
+          LOG="runtime.log"
+          "${EXE}" > "${LOG}" 2>&1 &
+          PID="$!"
+          for _ in {1..60}; do
+            if grep -q "CI_RNG_OK" "${LOG}"; then
+              break
+            fi
+            sleep 1
+          done
+          taskkill //PID "${PID}" //F >/dev/null 2>&1 || true
+          cat "${LOG}"
+          grep -q "Seeded rnd context using BCryptGenRandom" "${LOG}"
+          grep -q "CI_RNG_OK" "${LOG}"
+
+  linux-runtime:
+    name: Linux runtime
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Install runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1 libxi6 libxcursor1 libxrandr2 libxinerama1 libasound2t64 xvfb
+
+      - name: Download Bob
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL "http://d.defold.com/${DEFOLD_CHANNEL}/${BOB_VERSION_FILENAME}" > defold-info.json
+          DEFOLD_VERSION="$(sed -n 's/.*"sha1"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' defold-info.json)"
+          curl -fsSL -o bob.jar "http://d.defold.com/archive/${DEFOLD_CHANNEL}/${DEFOLD_VERSION}/bob/bob.jar"
+          java -jar bob.jar --version
+
+      - name: Use CI runtime collection
+        shell: bash
+        run: |
+          sed -i.bak "s#^main_collection = .*#main_collection = ${CI_MAIN_COLLECTION}#" game.project
+
+      - name: Bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -jar bob.jar resolve
+          java -jar bob.jar --platform=x86_64-linux --architectures=x86_64-linux build --build-server="${BUILD_SERVER}" --archive
+          java -jar bob.jar --platform=x86_64-linux --architectures=x86_64-linux bundle
+
+      - name: Run smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXE="$(find build/default -type f -perm -111 | head -n 1)"
+          LOG="runtime.log"
+          xvfb-run -a "${EXE}" > "${LOG}" 2>&1 &
+          PID="$!"
+          for _ in {1..60}; do
+            if grep -q "CI_RNG_OK" "${LOG}"; then
+              break
+            fi
+            sleep 1
+          done
+          kill "${PID}" 2>/dev/null || true
+          cat "${LOG}"
+          grep -q "Seeded rnd context using /dev/urandom" "${LOG}"
+          grep -q "CI_RNG_OK" "${LOG}"
+
+  html5-runtime:
+    name: HTML5 runtime
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2t64
+
+      - name: Download Bob
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL "http://d.defold.com/${DEFOLD_CHANNEL}/${BOB_VERSION_FILENAME}" > defold-info.json
+          DEFOLD_VERSION="$(sed -n 's/.*"sha1"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' defold-info.json)"
+          curl -fsSL -o bob.jar "http://d.defold.com/archive/${DEFOLD_CHANNEL}/${DEFOLD_VERSION}/bob/bob.jar"
+          java -jar bob.jar --version
+
+      - name: Use CI runtime collection
+        shell: bash
+        run: |
+          sed -i.bak "s#^main_collection = .*#main_collection = ${CI_MAIN_COLLECTION}#" game.project
+
+      - name: Bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -jar bob.jar resolve
+          java -jar bob.jar --platform=wasm-web --architectures=wasm-web build --build-server="${BUILD_SERVER}" --archive
+          java -jar bob.jar --platform=wasm-web --architectures=wasm-web bundle
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright
+          npx playwright install chromium
+
+      - name: Run smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          HTML_DIR="$(dirname "$(find build/default -name index.html -type f | head -n 1)")"
+          python3 -m http.server 8000 --directory "${HTML_DIR}" > server.log 2>&1 &
+          SERVER_PID="$!"
+          trap 'kill "${SERVER_PID}" 2>/dev/null || true' EXIT
+          node <<'NODE'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            const browser = await chromium.launch();
+            const page = await browser.newPage();
+            const logs = [];
+
+            page.on('console', message => {
+              const text = message.text();
+              logs.push(text);
+              console.log(text);
+            });
+
+            await page.goto('http://127.0.0.1:8000/index.html');
+
+            const started = Date.now();
+            while (!logs.some(text => text.includes('CI_RNG_OK'))) {
+              if (Date.now() - started > 60000) {
+                throw new Error('Timed out waiting for CI_RNG_OK');
+              }
+              await page.waitForTimeout(250);
+            }
+
+            const joined = logs.join('\n');
+            if (!joined.includes('Seeded rnd context using Web Crypto')) {
+              throw new Error('Missing Web Crypto entropy log');
+            }
+            if (/(CI (first|restored) (number|numbers):.*-\d)/.test(joined)) {
+              throw new Error('Unsigned number output contained a negative value');
+            }
+
+            await browser.close();
+          })();
+          NODE
+
+  android-device-runtime:
+    name: Android device runtime
+    if: github.event_name == 'workflow_dispatch' && inputs.run_android_device
+    runs-on: [self-hosted, android-device]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Download Bob
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL "http://d.defold.com/${DEFOLD_CHANNEL}/${BOB_VERSION_FILENAME}" > defold-info.json
+          DEFOLD_VERSION="$(sed -n 's/.*"sha1"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' defold-info.json)"
+          curl -fsSL -o bob.jar "http://d.defold.com/archive/${DEFOLD_CHANNEL}/${DEFOLD_VERSION}/bob/bob.jar"
+          java -jar bob.jar --version
+
+      - name: Use CI runtime collection
+        shell: bash
+        run: |
+          sed -i.bak "s#^main_collection = .*#main_collection = ${CI_MAIN_COLLECTION}#" game.project
+
+      - name: Bundle APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -jar bob.jar resolve
+          java -jar bob.jar --platform=armv7-android --architectures=armv7-android,arm64-android build --build-server="${BUILD_SERVER}" --archive
+          java -jar bob.jar --platform=armv7-android --architectures=armv7-android,arm64-android bundle
+
+      - name: Run smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="$(find build/default -name "*.apk" -type f | head -n 1)"
+          PACKAGE="$(aapt dump badging "${APK}" | sed -n "s/package: name='\([^']*\)'.*/\1/p")"
+          LOG="android.log"
+          adb logcat -c
+          adb install -r "${APK}"
+          adb shell monkey -p "${PACKAGE}" 1
+          adb logcat -v time > "${LOG}" &
+          LOGCAT_PID="$!"
+          for _ in {1..60}; do
+            if grep -q "CI_RNG_OK" "${LOG}"; then
+              break
+            fi
+            sleep 1
+          done
+          kill "${LOGCAT_PID}" 2>/dev/null || true
+          adb shell am force-stop "${PACKAGE}" || true
+          cat "${LOG}"
+          grep -q "Seeded rnd context using /dev/urandom" "${LOG}"
+          grep -q "CI_RNG_OK" "${LOG}"
