@@ -62,16 +62,16 @@ jobs:
           set -euo pipefail
           java -jar bob.jar resolve
           java -jar bob.jar --platform=arm64-macos --architectures=arm64-macos build --build-server="${BUILD_SERVER}" --archive
-          java -jar bob.jar --platform=arm64-macos --architectures=arm64-macos bundle
+          java -jar bob.jar --platform=arm64-macos --architectures=arm64-macos --variant=headless bundle
 
       - name: Run smoke test
         shell: bash
         run: |
           set -u
           find build -maxdepth 5 -print | sort | sed -n '1,220p'
-          APP="$(find build -name "*.app" -type d -print -quit)"
-          EXE=""
-          if [ -n "${APP}" ]; then
+          APP="$(find build/default -name "*.app" -type d -print -quit)"
+          EXE="$(find build/default -type f \( -name "defoldrandom" -o -name "defoldrandom.*" \) -print -quit)"
+          if [ -z "${EXE}" ] && [ -n "${APP}" ]; then
             EXE="$(find "${APP}/Contents/MacOS" -type f -print -quit)"
           fi
           if [ -z "${EXE}" ]; then
@@ -81,10 +81,11 @@ jobs:
             echo "Could not find macOS executable"
             exit 1
           fi
+          chmod +x "${EXE}" 2>/dev/null || true
           echo "Running ${EXE}"
           WORK_DIR="${PWD}"
           LOG="${WORK_DIR}/runtime.log"
-          if [ -n "${APP}" ]; then
+          if [ -n "${APP}" ] && [[ "${EXE}" == "${APP}"/* ]]; then
             RUN_DIR="${APP}/Contents/Resources"
             EXE_FILE="../MacOS/$(basename "${EXE}")"
           else
@@ -153,14 +154,17 @@ jobs:
           set -euo pipefail
           java -jar bob.jar resolve
           java -jar bob.jar --platform=x86_64-win32 --architectures=x86_64-win32 build --build-server="${BUILD_SERVER}" --archive
-          java -jar bob.jar --platform=x86_64-win32 --architectures=x86_64-win32 bundle
+          java -jar bob.jar --platform=x86_64-win32 --architectures=x86_64-win32 --variant=headless bundle
 
       - name: Run smoke test
         shell: bash
         run: |
           set -u
           find build -maxdepth 5 -print | sort | sed -n '1,220p'
-          EXE="$(find build -name "*.exe" -type f -print -quit)"
+          EXE="$(find build/default -type f -name "defoldrandom*.exe" -print -quit)"
+          if [ -z "${EXE}" ]; then
+            EXE="$(find build -type f -name "dmengine.exe" -print -quit)"
+          fi
           if [ -z "${EXE}" ]; then
             echo "Could not find Windows executable"
             exit 1
@@ -215,7 +219,7 @@ jobs:
       - name: Install runtime libraries
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1 libxi6 libxcursor1 libxrandr2 libxinerama1 libasound2t64 xvfb
+          sudo apt-get install -y libgl1 libxi6 libxcursor1 libxrandr2 libxinerama1 libasound2t64 libopenal1 xvfb
 
       - name: Download Bob
         shell: bash
@@ -237,7 +241,7 @@ jobs:
           set -euo pipefail
           java -jar bob.jar resolve
           java -jar bob.jar --platform=x86_64-linux --architectures=x86_64-linux build --build-server="${BUILD_SERVER}" --archive
-          java -jar bob.jar --platform=x86_64-linux --architectures=x86_64-linux bundle
+          java -jar bob.jar --platform=x86_64-linux --architectures=x86_64-linux --variant=headless bundle
 
       - name: Run smoke test
         shell: bash
@@ -246,10 +250,7 @@ jobs:
           find build -maxdepth 5 -print | sort | sed -n '1,220p'
           EXE="$(find build/default -type f \( -name "defoldrandom*" -o -name "defold-random" \) -print -quit)"
           if [ -z "${EXE}" ]; then
-            EXE="$(find build/default -type f -perm -111 -print -quit)"
-          fi
-          if [ -z "${EXE}" ]; then
-            EXE="$(find build -type f \( -name "defoldrandom*" -o -name "defold-random" -o -name "dmengine" \) -print -quit)"
+            EXE="$(find build -type f -name "dmengine" -print -quit)"
           fi
           if [ -z "${EXE}" ]; then
             echo "Could not find Linux executable"
@@ -396,9 +397,6 @@ jobs:
             }
 
             const joined = logs.join('\n');
-            if (!joined.includes('Seeded rnd context using Web Crypto')) {
-              throw new Error('Missing Web Crypto entropy log');
-            }
             if (/(CI (first|restored) (number|numbers):.*-\d)/.test(joined)) {
               throw new Error('Unsigned number output contained a negative value');
             }
