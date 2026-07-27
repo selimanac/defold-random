@@ -44,6 +44,14 @@ local function expect_unsigned_array(name, values)
 	end
 end
 
+local function emit_ci_ok()
+	print("CI_RNG_OK")
+
+	if html5 and html5.run then
+		html5.run("console.log('CI_RNG_OK')")
+	end
+end
+
 local function check_expected_sequence(label, rng)
 	local number = rnd.number(rng)
 	expect_equal(label .. " number", number, 2280515124)
@@ -102,5 +110,5 @@ function init(self)
 	rnd.delete(rng64)
 
 	rnd.clear_contexts()
-	print("CI_RNG_OK")
+	emit_ci_ok()
 end

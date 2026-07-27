@@ -67,22 +67,50 @@ jobs:
       - name: Run smoke test
         shell: bash
         run: |
-          set -euo pipefail
-          APP="$(find build/default -name "*.app" -type d | head -n 1)"
-          EXE="$(find "${APP}/Contents/MacOS" -type f | head -n 1)"
+          set -u
+          find build -maxdepth 5 -print | sort | sed -n '1,220p'
+          APP="$(find build -name "*.app" -type d -print -quit)"
+          EXE=""
+          if [ -n "${APP}" ]; then
+            EXE="$(find "${APP}/Contents/MacOS" -type f -print -quit)"
+          fi
+          if [ -z "${EXE}" ]; then
+            EXE="$(find build -path "*/dmengine" -type f -print -quit)"
+          fi
+          if [ -z "${EXE}" ]; then
+            echo "Could not find macOS executable"
+            exit 1
+          fi
+          echo "Running ${EXE}"
           LOG="runtime.log"
           "${EXE}" > "${LOG}" 2>&1 &
           PID="$!"
+          FOUND=0
           for _ in {1..60}; do
             if grep -q "CI_RNG_OK" "${LOG}"; then
+              FOUND=1
+              break
+            fi
+            if ! kill -0 "${PID}" 2>/dev/null; then
               break
             fi
             sleep 1
           done
-          kill "${PID}" 2>/dev/null || true
+          if kill -0 "${PID}" 2>/dev/null; then
+            kill "${PID}" 2>/dev/null || true
+            wait "${PID}" 2>/dev/null || true
+          else
+            wait "${PID}" 2>/dev/null || true
+          fi
           cat "${LOG}"
-          grep -q "Seeded rnd context using SecRandomCopyBytes" "${LOG}"
-          grep -q "CI_RNG_OK" "${LOG}"
+          if ! grep -q "Seeded rnd context using SecRandomCopyBytes" "${LOG}"; then
+            echo "Missing SecRandomCopyBytes entropy log"
+            exit 1
+          fi
+          if [ "${FOUND}" -ne 1 ]; then
+            echo "Missing CI_RNG_OK"
+            exit 1
+          fi
 
   windows-runtime:
     name: Windows runtime
@@ -120,21 +148,43 @@ jobs:
       - name: Run smoke test
         shell: bash
         run: |
-          set -euo pipefail
-          EXE="$(find build/default -name "*.exe" -type f | head -n 1)"
+          set -u
+          find build -maxdepth 5 -print | sort | sed -n '1,220p'
+          EXE="$(find build -name "*.exe" -type f -print -quit)"
+          if [ -z "${EXE}" ]; then
+            echo "Could not find Windows executable"
+            exit 1
+          fi
+          echo "Running ${EXE}"
           LOG="runtime.log"
           "${EXE}" > "${LOG}" 2>&1 &
           PID="$!"
+          FOUND=0
           for _ in {1..60}; do
             if grep -q "CI_RNG_OK" "${LOG}"; then
+              FOUND=1
+              break
+            fi
+            if ! kill -0 "${PID}" 2>/dev/null; then
               break
             fi
             sleep 1
           done
-          taskkill //PID "${PID}" //F >/dev/null 2>&1 || true
+          if kill -0 "${PID}" 2>/dev/null; then
+            taskkill //PID "${PID}" //F >/dev/null 2>&1 || true
+            wait "${PID}" 2>/dev/null || true
+          else
+            wait "${PID}" 2>/dev/null || true
+          fi
           cat "${LOG}"
-          grep -q "Seeded rnd context using BCryptGenRandom" "${LOG}"
-          grep -q "CI_RNG_OK" "${LOG}"
+          if ! grep -q "Seeded rnd context using BCryptGenRandom" "${LOG}"; then
+            echo "Missing BCryptGenRandom entropy log"
+            exit 1
+          fi
+          if [ "${FOUND}" -ne 1 ]; then
+            echo "Missing CI_RNG_OK"
+            exit 1
+          fi
 
   linux-runtime:
     name: Linux runtime
@@ -177,21 +227,46 @@ jobs:
       - name: Run smoke test
         shell: bash
         run: |
-          set -euo pipefail
-          EXE="$(find build/default -type f -perm -111 | head -n 1)"
+          set -u
+          find build -maxdepth 5 -print | sort | sed -n '1,220p'
+          EXE="$(find build -type f \( -name "defold-random" -o -name "dmengine" \) -print -quit)"
+          if [ -z "${EXE}" ]; then
+            EXE="$(find build -type f -perm -111 -print -quit)"
+          fi
+          if [ -z "${EXE}" ]; then
+            echo "Could not find Linux executable"
+            exit 1
+          fi
+          echo "Running ${EXE}"
           LOG="runtime.log"
           xvfb-run -a "${EXE}" > "${LOG}" 2>&1 &
           PID="$!"
+          FOUND=0
           for _ in {1..60}; do
             if grep -q "CI_RNG_OK" "${LOG}"; then
+              FOUND=1
+              break
+            fi
+            if ! kill -0 "${PID}" 2>/dev/null; then
               break
             fi
             sleep 1
           done
-          kill "${PID}" 2>/dev/null || true
+          if kill -0 "${PID}" 2>/dev/null; then
+            kill "${PID}" 2>/dev/null || true
+            wait "${PID}" 2>/dev/null || true
+          else
+            wait "${PID}" 2>/dev/null || true
+          fi
           cat "${LOG}"
-          grep -q "Seeded rnd context using /dev/urandom" "${LOG}"
-          grep -q "CI_RNG_OK" "${LOG}"
+          if ! grep -q "Seeded rnd context using /dev/urandom" "${LOG}"; then
+            echo "Missing /dev/urandom entropy log"
+            exit 1
+          fi
+          if [ "${FOUND}" -ne 1 ]; then
+            echo "Missing CI_RNG_OK"
+            exit 1
+          fi
 
   html5-runtime:
     name: HTML5 runtime
@@ -244,10 +319,23 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          HTML_DIR="$(dirname "$(find build/default -name index.html -type f | head -n 1)")"
+          find build -maxdepth 6 -print | sort | sed -n '1,260p'
+          HTML_INDEX="$(find build -name index.html -type f -print -quit)"
+          if [ -z "${HTML_INDEX}" ]; then
+            echo "Could not find HTML5 index.html"
+            exit 1
+          fi
+          HTML_DIR="$(dirname "${HTML_INDEX}")"
+          echo "Serving ${HTML_DIR}"
           python3 -m http.server 8000 --directory "${HTML_DIR}" > server.log 2>&1 &
           SERVER_PID="$!"
           trap 'kill "${SERVER_PID}" 2>/dev/null || true' EXIT
+          for _ in {1..40}; do
+            if curl -fsS "http://127.0.0.1:8000/index.html" >/dev/null; then
+              break
+            fi
+            sleep 0.25
+          done
           node <<'NODE'
           const { chromium } = require('playwright');
 
@@ -261,8 +349,19 @@ jobs:
               logs.push(text);
               console.log(text);
             });
+            page.on('pageerror', error => {
+              const text = 'PAGEERROR: ' + error.message;
+              logs.push(text);
+              console.log(text);
+            });
+            page.on('requestfailed', request => {
+              const text = 'REQUESTFAILED: ' + request.url() + ' ' + request.failure().errorText;
+              logs.push(text);
+              console.log(text);
+            });
 
             await page.goto('http://127.0.0.1:8000/index.html');
+            await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
 
             const started = Date.now();
             while (!logs.some(text => text.includes('CI_RNG_OK'))) {
