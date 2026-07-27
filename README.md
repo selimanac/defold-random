@@ -228,3 +228,23 @@ Debug/sample method that prints PCG sample output and consumes the context RNG s
 - Added exact raw state APIs: `rnd.state(id)` and `rnd.set_state(id, state, increment)`.
 - Added exact unsigned 64-bit decimal string support for context seeds and raw state save/restore.
 - Added utility APIs: `rnd.bound(id, upper_bound)`, `rnd.card(id)`, and `rnd.card2(id)`.
+
+
+### 1.2.8
+
+- Added `rnd.seed32(init_state, init_seq)` for exact deterministic unsigned 32-bit seeding from Lua.
+- Added batch generators:
+  - `rnd.numbers(count)`
+  - `rnd.ranges(count, min, max)`
+  - `rnd.doubles(count)`
+- Added probability helpers:
+  - `rnd.boolean()`
+  - `rnd.chance(probability)`
+- Added `rnd.shuffle(array)` for in-place Fisher-Yates table shuffling.
+- Added `pcgrandom/annotations.lua` 
+- Added missing `rnd.dice()` documentation to `pcgrandom.script_api`.
+- Added entropy reseed logging showing whether OS entropy or fallback entropy was used.
+- `rnd.seed()` now reseeds from entropy only when called with no arguments.
+- `rnd.seed(0, seq)` is now valid deterministic seeding behavior.
+- `rnd.double_range(min, max)` now generates values in `[min, max)`, matching `rnd.double()` semantics.
+
