@@ -49,6 +49,8 @@ local function emit_ci_ok()
 
 	if html5 and html5.run then
 		html5.run("console.log('CI_RNG_OK')")
+	else
+		sys.exit(0)
 	end
 end
 
