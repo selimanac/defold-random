@@ -56,46 +56,28 @@ jobs:
         run: |
           sed -i.bak "s#^main_collection = .*#main_collection = ${CI_MAIN_COLLECTION}#" game.project
 
-      - name: Bundle
+      - name: Build headless runtime
         shell: bash
         run: |
           set -euo pipefail
           java -jar bob.jar resolve
-          java -jar bob.jar --platform=arm64-macos --architectures=arm64-macos build --build-server="${BUILD_SERVER}" --archive
-          java -jar bob.jar --platform=arm64-macos --architectures=arm64-macos --variant=headless bundle
+          java -jar bob.jar --platform=arm64-macos --architectures=arm64-macos --variant=headless build --build-server="${BUILD_SERVER}" --archive
 
       - name: Run smoke test
         shell: bash
         run: |
           set -u
           find build -maxdepth 5 -print | sort | sed -n '1,220p'
-          APP="$(find build/default -name "*.app" -type d -print -quit)"
-          EXE="$(find build/default -type f \( -name "defoldrandom" -o -name "defoldrandom.*" \) -print -quit)"
-          if [ -z "${EXE}" ] && [ -n "${APP}" ]; then
-            EXE="$(find "${APP}/Contents/MacOS" -type f -print -quit)"
-          fi
-          if [ -z "${EXE}" ]; then
-            EXE="$(find build -path "*/dmengine" -type f -print -quit)"
-          fi
+          EXE="$(find build/arm64-osx -type f -name "dmengine*" ! -name "*unstripped*" -print -quit)"
           if [ -z "${EXE}" ]; then
             echo "Could not find macOS executable"
             exit 1
           fi
           chmod +x "${EXE}" 2>/dev/null || true
           echo "Running ${EXE}"
-          WORK_DIR="${PWD}"
-          LOG="${WORK_DIR}/runtime.log"
-          if [ -n "${APP}" ] && [[ "${EXE}" == "${APP}"/* ]]; then
-            RUN_DIR="${APP}/Contents/Resources"
-            EXE_FILE="../MacOS/$(basename "${EXE}")"
-          else
-            RUN_DIR="$(dirname "${EXE}")"
-            EXE_FILE="./$(basename "${EXE}")"
-          fi
-          cd "${RUN_DIR}"
-          "${EXE_FILE}" > "${LOG}" 2>&1 &
+          LOG="runtime.log"
+          "${EXE}" > "${LOG}" 2>&1 &
           PID="$!"
-          cd "${WORK_DIR}"
           FOUND=0
           for _ in {1..60}; do
             if grep -q "CI_RNG_OK" "${LOG}"; then
@@ -148,36 +130,27 @@ jobs:
         run: |
           sed -i.bak "s#^main_collection = .*#main_collection = ${CI_MAIN_COLLECTION}#" game.project
 
-      - name: Bundle
+      - name: Build headless runtime
         shell: bash
         run: |
           set -euo pipefail
           java -jar bob.jar resolve
-          java -jar bob.jar --platform=x86_64-win32 --architectures=x86_64-win32 build --build-server="${BUILD_SERVER}" --archive
-          java -jar bob.jar --platform=x86_64-win32 --architectures=x86_64-win32 --variant=headless bundle
+          java -jar bob.jar --platform=x86_64-win32 --architectures=x86_64-win32 --variant=headless build --build-server="${BUILD_SERVER}" --archive
 
       - name: Run smoke test
         shell: bash
         run: |
           set -u
           find build -maxdepth 5 -print | sort | sed -n '1,220p'
-          EXE="$(find build/default -type f -name "defoldrandom*.exe" -print -quit)"
-          if [ -z "${EXE}" ]; then
-            EXE="$(find build -type f -name "dmengine.exe" -print -quit)"
-          fi
+          EXE="$(find build/x86_64-win32 -type f -name "dmengine*.exe" ! -name "*unstripped*" -print -quit)"
           if [ -z "${EXE}" ]; then
             echo "Could not find Windows executable"
             exit 1
           fi
           echo "Running ${EXE}"
-          WORK_DIR="${PWD}"
-          LOG="${WORK_DIR}/runtime.log"
-          RUN_DIR="$(dirname "${EXE}")"
-          EXE_FILE="./$(basename "${EXE}")"
-          cd "${RUN_DIR}"
-          "${EXE_FILE}" > "${LOG}" 2>&1 &
+          LOG="runtime.log"
+          "${EXE}" > "${LOG}" 2>&1 &
           PID="$!"
-          cd "${WORK_DIR}"
           FOUND=0
           for _ in {1..60}; do
             if grep -q "CI_RNG_OK" "${LOG}"; then
@@ -219,7 +192,7 @@ jobs:
       - name: Install runtime libraries
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1 libxi6 libxcursor1 libxrandr2 libxinerama1 libasound2t64 libopenal1 xvfb
+          sudo apt-get install -y libgl1 libglu1-mesa libxi6 libxcursor1 libxrandr2 libxinerama1 libasound2t64 libopenal1 xvfb
 
       - name: Download Bob
         shell: bash
@@ -235,37 +208,28 @@ jobs:
         run: |
           sed -i.bak "s#^main_collection = .*#main_collection = ${CI_MAIN_COLLECTION}#" game.project
 
-      - name: Bundle
+      - name: Build headless runtime
         shell: bash
         run: |
           set -euo pipefail
           java -jar bob.jar resolve
-          java -jar bob.jar --platform=x86_64-linux --architectures=x86_64-linux build --build-server="${BUILD_SERVER}" --archive
-          java -jar bob.jar --platform=x86_64-linux --architectures=x86_64-linux --variant=headless bundle
+          java -jar bob.jar --platform=x86_64-linux --architectures=x86_64-linux --variant=headless build --build-server="${BUILD_SERVER}" --archive
 
       - name: Run smoke test
         shell: bash
         run: |
           set -u
           find build -maxdepth 5 -print | sort | sed -n '1,220p'
-          EXE="$(find build/default -type f \( -name "defoldrandom*" -o -name "defold-random" \) -print -quit)"
-          if [ -z "${EXE}" ]; then
-            EXE="$(find build -type f -name "dmengine" -print -quit)"
-          fi
+          EXE="$(find build/x86_64-linux -type f -name "dmengine*" ! -name "*unstripped*" -print -quit)"
           if [ -z "${EXE}" ]; then
             echo "Could not find Linux executable"
             exit 1
           fi
           chmod +x "${EXE}" 2>/dev/null || true
           echo "Running ${EXE}"
-          WORK_DIR="${PWD}"
-          LOG="${WORK_DIR}/runtime.log"
-          RUN_DIR="$(dirname "${EXE}")"
-          EXE_FILE="./$(basename "${EXE}")"
-          cd "${RUN_DIR}"
-          xvfb-run -a "${EXE_FILE}" > "${LOG}" 2>&1 &
+          LOG="runtime.log"
+          "${EXE}" > "${LOG}" 2>&1 &
           PID="$!"
-          cd "${WORK_DIR}"
           FOUND=0
           for _ in {1..60}; do
             if grep -q "CI_RNG_OK" "${LOG}"; then
