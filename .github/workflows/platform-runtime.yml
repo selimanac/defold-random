@@ -82,9 +82,19 @@ jobs:
             exit 1
           fi
           echo "Running ${EXE}"
-          LOG="runtime.log"
-          "${EXE}" > "${LOG}" 2>&1 &
+          WORK_DIR="${PWD}"
+          LOG="${WORK_DIR}/runtime.log"
+          if [ -n "${APP}" ]; then
+            RUN_DIR="${APP}/Contents/Resources"
+            EXE_FILE="../MacOS/$(basename "${EXE}")"
+          else
+            RUN_DIR="$(dirname "${EXE}")"
+            EXE_FILE="./$(basename "${EXE}")"
+          fi
+          cd "${RUN_DIR}"
+          "${EXE_FILE}" > "${LOG}" 2>&1 &
           PID="$!"
+          cd "${WORK_DIR}"
           FOUND=0
           for _ in {1..60}; do
             if grep -q "CI_RNG_OK" "${LOG}"; then
@@ -156,9 +166,14 @@ jobs:
             exit 1
           fi
           echo "Running ${EXE}"
-          LOG="runtime.log"
-          "${EXE}" > "${LOG}" 2>&1 &
+          WORK_DIR="${PWD}"
+          LOG="${WORK_DIR}/runtime.log"
+          RUN_DIR="$(dirname "${EXE}")"
+          EXE_FILE="./$(basename "${EXE}")"
+          cd "${RUN_DIR}"
+          "${EXE_FILE}" > "${LOG}" 2>&1 &
           PID="$!"
+          cd "${WORK_DIR}"
           FOUND=0
           for _ in {1..60}; do
             if grep -q "CI_RNG_OK" "${LOG}"; then
@@ -229,18 +244,27 @@ jobs:
         run: |
           set -u
           find build -maxdepth 5 -print | sort | sed -n '1,220p'
-          EXE="$(find build -type f \( -name "defold-random" -o -name "dmengine" \) -print -quit)"
+          EXE="$(find build/default -type f \( -name "defoldrandom*" -o -name "defold-random" \) -print -quit)"
           if [ -z "${EXE}" ]; then
-            EXE="$(find build -type f -perm -111 -print -quit)"
+            EXE="$(find build/default -type f -perm -111 -print -quit)"
+          fi
+          if [ -z "${EXE}" ]; then
+            EXE="$(find build -type f \( -name "defoldrandom*" -o -name "defold-random" -o -name "dmengine" \) -print -quit)"
           fi
           if [ -z "${EXE}" ]; then
             echo "Could not find Linux executable"
             exit 1
           fi
+          chmod +x "${EXE}" 2>/dev/null || true
           echo "Running ${EXE}"
-          LOG="runtime.log"
-          xvfb-run -a "${EXE}" > "${LOG}" 2>&1 &
+          WORK_DIR="${PWD}"
+          LOG="${WORK_DIR}/runtime.log"
+          RUN_DIR="$(dirname "${EXE}")"
+          EXE_FILE="./$(basename "${EXE}")"
+          cd "${RUN_DIR}"
+          xvfb-run -a "${EXE_FILE}" > "${LOG}" 2>&1 &
           PID="$!"
+          cd "${WORK_DIR}"
           FOUND=0
           for _ in {1..60}; do
             if grep -q "CI_RNG_OK" "${LOG}"; then

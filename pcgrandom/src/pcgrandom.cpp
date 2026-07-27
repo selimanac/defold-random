@@ -113,11 +113,6 @@ namespace rnd
 
         pcg32_srandom_r(target, seeds[0], seeds[1]);
         dmLogInfo("Seeded rnd context using %s", source_name);
-#if defined(__EMSCRIPTEN__)
-        char console_message[128];
-        snprintf(console_message, sizeof(console_message), "INFO:PCGRANDOM: Seeded rnd context using %s", source_name);
-        EM_ASM({ console.log(UTF8ToString($0)); }, console_message);
-#endif
     }
 
     bool check_uint32(lua_State* L, int arg_index, const char* name, uint32_t* out)
